@@ -7,12 +7,10 @@
   <title>ระบบจัดการถังดับเพลิง</title>
   <script src="https://cdn.tailwindcss.com"></script>
   
-  <!-- ฟอนต์ Sarabun -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   
-  <!-- ไลบรารีสำหรับสแกน QR Code -->
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
 
@@ -47,7 +45,6 @@
       margin-top: 10px;
     }
     #reader span a { display: none; }
-    /* Loading overlay */
     #loading-overlay { display: none; }
     #loading-overlay.active { display: flex; }
   </style>
@@ -63,19 +60,48 @@
   <!-- ================= พื้นที่พิมพ์รายงาน (ใบสลิปตรวจเช็ค) ================= -->
   <div id="print-section" class="hidden bg-white text-black max-w-lg mx-auto">
     <div class="text-center mb-6 border-b-2 border-gray-800 pb-4">
-      <h2 class="text-2xl font-bold mb-1">ใบรายงานการตรวจสอบถังดับเพลิง</h2>
-      <p class="text-sm text-gray-600">เอกสารบันทึกการตรวจสอบสภาพประจำเดือน</p>
+      <h2 class="text-2xl font-bold mb-1">ใบตรวจเช็คเครื่องดับเพลิง</h2>
+      <p class="text-sm text-gray-600">เอกสารบันทึกการตรวจสอบประจำเดือน</p>
     </div>
-    <div class="space-y-4 text-lg ml-4">
-      <p><strong>รหัสถังดับเพลิง (ID):</strong> <span id="print-id" class="ml-2"></span></p>
-      <p><strong>วันที่ตรวจสอบ:</strong> <span id="print-date" class="ml-2"></span></p>
-      <p><strong>สภาพโดยรวม:</strong> <span id="print-status" class="ml-2"></span></p>
-      <p><strong>ผู้ตรวจสอบ:</strong> <span id="print-inspector" class="ml-2"></span></p>
+    
+    <div class="grid grid-cols-2 gap-4 text-base mb-6">
+      <p><strong>รหัสถัง (ID):</strong> <span id="print-id"></span></p>
+      <p><strong>วันที่ตรวจสอบ:</strong> <span id="print-date"></span></p>
+      <p><strong>ผู้ตรวจสอบ:</strong> <span id="print-inspector"></span></p>
+      <p><strong>สรุปผล:</strong> <span id="print-status" class="font-bold"></span></p>
     </div>
-    <div class="mt-20 text-center">
-      <p>ลงชื่อ.......................................................ผู้ตรวจสอบ</p>
+
+    <table class="w-full border-collapse border border-gray-400 mb-8 text-sm">
+      <thead>
+        <tr class="bg-gray-100">
+          <th class="border border-gray-400 p-2 text-left w-2/3">รายการตรวจสอบ</th>
+          <th class="border border-gray-400 p-2 text-center w-1/3">ผลการประเมิน</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="border border-gray-400 p-2">1. มาตรวัดแรงดัน (อยู่ในแถบสีเขียว)</td>
+          <td class="border border-gray-400 p-2 text-center" id="print-gauge"></td>
+        </tr>
+        <tr>
+          <td class="border border-gray-400 p-2">2. ซีลและสลัก (สภาพสมบูรณ์)</td>
+          <td class="border border-gray-400 p-2 text-center" id="print-seal"></td>
+        </tr>
+        <tr>
+          <td class="border border-gray-400 p-2">3. สายฉีด (ไม่มีรอยปริแตก)</td>
+          <td class="border border-gray-400 p-2 text-center" id="print-hose"></td>
+        </tr>
+        <tr>
+          <td class="border border-gray-400 p-2">4. สภาพตัวถัง (ไม่มีรอยบุบ/สนิม)</td>
+          <td class="border border-gray-400 p-2 text-center" id="print-cylinder"></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="mt-16 text-center">
+      <p>ลงชื่อ.......................................................</p>
       <p class="mt-2">( <span id="print-sign-name" class="font-medium px-4"></span> )</p>
-      <p class="mt-2 text-sm text-gray-500">วันที่ <span id="print-sign-date"></span></p>
+      <p class="mt-1 text-sm text-gray-500">ผู้ตรวจสอบ</p>
     </div>
   </div>
 
@@ -90,7 +116,7 @@
   <div id="editModal" class="hidden fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
     <div class="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl">
       <div class="flex justify-between items-center mb-5 border-b pb-3">
-        <h3 class="text-xl font-bold text-gray-900">แก้ไขข้อมูลการตรวจสอบ</h3>
+        <h3 class="text-xl font-bold text-gray-900">แก้ไขสถานะภาพรวม</h3>
         <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-700 bg-gray-100 rounded-full p-1.5 transition">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
         </button>
@@ -101,11 +127,10 @@
           <input type="text" id="edit-id" readonly class="w-full px-4 py-2 bg-gray-100 border border-gray-200 rounded-xl font-medium text-gray-600 cursor-not-allowed">
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">ปรับปรุงสภาพถังใหม่</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">ปรับปรุงสถานะใหม่</label>
           <select id="edit-status" required class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-gray-800">
-            <option value="ปกติ (สมบูรณ์)">🟢 ปกติ (สมบูรณ์)</option>
-            <option value="ชำรุด (มีรอยบุบ/สนิม)">🟠 ชำรุด (มีรอยบุบ/สนิม)</option>
-            <option value="สลักหาย / สายแตก">🔴 สลักหาย / สายแตก</option>
+            <option value="ปกติ">🟢 ปกติ (พร้อมใช้งาน)</option>
+            <option value="ชำรุด">🔴 ชำรุด (ส่งซ่อม/แก้ไข)</option>
           </select>
         </div>
         <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-xl transition shadow-md mt-6">
@@ -225,13 +250,14 @@
     </div>
 
 
-    <!-- ================= แท็บ 2: ตรวจเช็ค ================= -->
+    <!-- ================= แท็บ 2: ตรวจเช็ค (แบบฟอร์ม 4 ข้อ) ================= -->
     <div id="tab-inspection" class="tab-content active bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 p-6 md:p-8">
       <div class="text-center mb-6">
         <div class="inline-flex items-center justify-center w-14 h-14 bg-rose-50 text-rose-500 rounded-2xl mb-4">
           <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
         </div>
         <h2 class="text-2xl font-semibold text-gray-900 tracking-tight">บันทึกการตรวจสอบ</h2>
+        <p class="text-gray-500 text-sm mt-1">ประเมิน 4 จุดสำคัญของถังดับเพลิง</p>
       </div>
 
       <!-- พื้นที่สำหรับสแกนกล้อง -->
@@ -241,7 +267,6 @@
         <div class="absolute bottom-4 w-full left-0 flex justify-center space-x-3 px-4">
           <button type="button" onclick="stopScanner()" class="bg-white text-gray-700 px-5 py-2 rounded-full font-medium text-sm shadow-md border hover:bg-gray-50">ปิดกล้อง</button>
           
-          <!-- ปุ่มทางเลือก สำรองกรณีกล้องไม่ทำงาน -->
           <label class="bg-blue-600 text-white px-5 py-2 rounded-full font-medium text-sm shadow-md cursor-pointer hover:bg-blue-700 transition">
             อัปโหลดรูป QR
             <input type="file" accept="image/*" id="qr-file-input" class="hidden" onchange="scanFromFile(event)">
@@ -250,9 +275,9 @@
       </div>
 
       <div id="formContainer">
-        <form id="inspectionForm" onsubmit="submitForm(event)" class="space-y-4">
+        <form id="inspectionForm" onsubmit="submitForm(event)">
           
-          <div>
+          <div class="mb-5">
             <label class="block text-sm font-medium text-gray-700 mb-1 ml-1">รหัสถังดับเพลิง (ID)</label>
             <div class="flex space-x-2">
               <input type="text" id="extinguisherId" name="extinguisherId" required placeholder="พิมพ์หรือสแกน"
@@ -263,35 +288,95 @@
             </div>
           </div>
 
-          <div>
+          <div class="mb-8">
             <label class="block text-sm font-medium text-gray-700 mb-1 ml-1">ชื่อผู้ตรวจสอบ</label>
             <input type="text" name="inspector" required placeholder="เช่น นายสมชาย" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-gray-900 outline-none">
           </div>
 
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1 ml-1">สภาพตัวถัง / สลัก</label>
-            <select name="condition" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-gray-900 outline-none">
-              <option value="ปกติ (สมบูรณ์)">🟢 ปกติ (สมบูรณ์)</option>
-              <option value="ชำรุด (มีรอยบุบ/สนิม)">🟠 ชำรุด (มีรอยบุบ/สนิม)</option>
-              <option value="สลักหาย / สายแตก">🔴 สลักหาย / สายแตก</option>
-            </select>
+          <h3 class="font-bold text-gray-800 mb-4 border-b pb-2">รายการตรวจสอบ 4 จุด</h3>
+
+          <!-- ข้อ 1: มาตรวัด -->
+          <div class="mb-5">
+            <label class="block text-sm font-medium text-gray-700 mb-2">1. มาตรวัดแรงดัน (เข็มอยู่ในแถบสีเขียว)</label>
+            <div class="flex gap-3">
+              <label class="flex-1 cursor-pointer">
+                <input type="radio" name="gauge" value="ผ่าน" class="peer sr-only" required>
+                <div class="text-center py-3 border border-gray-200 rounded-xl bg-gray-50 peer-checked:bg-emerald-50 peer-checked:border-emerald-500 peer-checked:text-emerald-700 font-medium transition shadow-sm">
+                  ✓ ผ่าน
+                </div>
+              </label>
+              <label class="flex-1 cursor-pointer">
+                <input type="radio" name="gauge" value="ไม่ผ่าน" class="peer sr-only">
+                <div class="text-center py-3 border border-gray-200 rounded-xl bg-gray-50 peer-checked:bg-rose-50 peer-checked:border-rose-500 peer-checked:text-rose-700 font-medium transition shadow-sm">
+                  ✗ ไม่ผ่าน
+                </div>
+              </label>
+            </div>
           </div>
 
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1 ml-1">สภาพแรงดัน (เกจวัด)</label>
-            <select name="pressure" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-gray-900 outline-none">
-              <option value="ปกติ (เข็มอยู่พื้นที่สีเขียว)">🟢 ปกติ (พื้นที่สีเขียว)</option>
-              <option value="แรงดันตก (เข็มชี้ไปทางซ้าย)">🔴 แรงดันตก (ชี้ซ้าย)</option>
-              <option value="แรงดันเกิน (เข็มชี้ไปทางขวา)">🔴 แรงดันเกิน (ชี้ขวา)</option>
-            </select>
+          <!-- ข้อ 2: ซีลและสลัก -->
+          <div class="mb-5">
+            <label class="block text-sm font-medium text-gray-700 mb-2">2. ซีลและสลัก (อยู่ครบ สภาพสมบูรณ์)</label>
+            <div class="flex gap-3">
+              <label class="flex-1 cursor-pointer">
+                <input type="radio" name="sealPin" value="ผ่าน" class="peer sr-only" required>
+                <div class="text-center py-3 border border-gray-200 rounded-xl bg-gray-50 peer-checked:bg-emerald-50 peer-checked:border-emerald-500 peer-checked:text-emerald-700 font-medium transition shadow-sm">
+                  ✓ ผ่าน
+                </div>
+              </label>
+              <label class="flex-1 cursor-pointer">
+                <input type="radio" name="sealPin" value="ไม่ผ่าน" class="peer sr-only">
+                <div class="text-center py-3 border border-gray-200 rounded-xl bg-gray-50 peer-checked:bg-rose-50 peer-checked:border-rose-500 peer-checked:text-rose-700 font-medium transition shadow-sm">
+                  ✗ ไม่ผ่าน
+                </div>
+              </label>
+            </div>
           </div>
 
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1 ml-1">หมายเหตุ</label>
-            <textarea name="notes" rows="2" placeholder="รายละเอียดเพิ่มเติม" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-gray-900 outline-none"></textarea>
+          <!-- ข้อ 3: สายฉีด -->
+          <div class="mb-5">
+            <label class="block text-sm font-medium text-gray-700 mb-2">3. สายฉีด (ไม่มีรอยปริแตก/แมลงทำรัง)</label>
+            <div class="flex gap-3">
+              <label class="flex-1 cursor-pointer">
+                <input type="radio" name="hose" value="ผ่าน" class="peer sr-only" required>
+                <div class="text-center py-3 border border-gray-200 rounded-xl bg-gray-50 peer-checked:bg-emerald-50 peer-checked:border-emerald-500 peer-checked:text-emerald-700 font-medium transition shadow-sm">
+                  ✓ ผ่าน
+                </div>
+              </label>
+              <label class="flex-1 cursor-pointer">
+                <input type="radio" name="hose" value="ไม่ผ่าน" class="peer sr-only">
+                <div class="text-center py-3 border border-gray-200 rounded-xl bg-gray-50 peer-checked:bg-rose-50 peer-checked:border-rose-500 peer-checked:text-rose-700 font-medium transition shadow-sm">
+                  ✗ ไม่ผ่าน
+                </div>
+              </label>
+            </div>
           </div>
 
-          <button type="submit" id="submitBtn" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-medium py-3.5 px-4 rounded-2xl transition mt-6">
+          <!-- ข้อ 4: สภาพถัง -->
+          <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-2">4. สภาพตัวถัง (ไม่มีรอยบุบ/สนิม)</label>
+            <div class="flex gap-3">
+              <label class="flex-1 cursor-pointer">
+                <input type="radio" name="cylinder" value="ผ่าน" class="peer sr-only" required>
+                <div class="text-center py-3 border border-gray-200 rounded-xl bg-gray-50 peer-checked:bg-emerald-50 peer-checked:border-emerald-500 peer-checked:text-emerald-700 font-medium transition shadow-sm">
+                  ✓ ผ่าน
+                </div>
+              </label>
+              <label class="flex-1 cursor-pointer">
+                <input type="radio" name="cylinder" value="ไม่ผ่าน" class="peer sr-only">
+                <div class="text-center py-3 border border-gray-200 rounded-xl bg-gray-50 peer-checked:bg-rose-50 peer-checked:border-rose-500 peer-checked:text-rose-700 font-medium transition shadow-sm">
+                  ✗ ไม่ผ่าน
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div class="mb-2">
+            <label class="block text-sm font-medium text-gray-700 mb-1 ml-1">หมายเหตุเพิ่มเติม</label>
+            <textarea name="notes" rows="2" placeholder="ระบุสาเหตุหากมีข้อที่ไม่ผ่าน..." class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-gray-900 outline-none"></textarea>
+          </div>
+
+          <button type="submit" id="submitBtn" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-medium py-3.5 px-4 rounded-2xl transition mt-6 shadow-md">
             บันทึกผลการตรวจสอบ
           </button>
         </form>
@@ -302,7 +387,8 @@
           <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
         </div>
         <h3 class="text-xl font-semibold text-gray-900 mb-2">บันทึกสำเร็จ</h3>
-        <button onclick="resetInspectionForm()" class="mt-4 text-rose-600 font-medium px-6 py-2 rounded-full border border-rose-100 bg-rose-50 hover:bg-rose-100 transition">ตรวจเช็คถังต่อไป</button>
+        <p id="resultFeedback" class="text-gray-500 text-sm mb-6"></p>
+        <button onclick="resetInspectionForm()" class="mt-2 text-rose-600 font-medium px-6 py-2 rounded-full border border-rose-100 bg-rose-50 hover:bg-rose-100 transition">ตรวจเช็คถังต่อไป</button>
       </div>
     </div>
 
@@ -348,14 +434,13 @@
     </div>
   </main>
 
-  <!-- ================= สคริปต์หลัก (ใช้ API แทน google.script.run) ================= -->
+  <!-- ================= สคริปต์หลัก ================= -->
   <script>
     // ⚠️ นำ URL ของ Web App จาก Google Apps Script มาวางแทนที่ด้านล่างนี้ ⚠️
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz87jP3uPB1vEUCjZG5vhsJ5wA19AbZ8cfofFqDLXednFO6P20eHEIQYlXsuS3A2YUSJA/exec"; 
     
     let allReports = [];
 
-    // ระบบรับ URL Param สำหรับอ่าน ID ตอนสแกน QR
     function getUrlParameter(name) {
       name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
       var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
@@ -363,10 +448,9 @@
       return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
     }
 
-    // ฟังก์ชันศูนย์กลางเรียก API (ลดความซ้ำซ้อนของโค้ด)
     async function fetchAPI(action, data = null) {
-      if (APPS_SCRIPT_URL === "YOUR_WEB_APP_URL_HERE" || !APPS_SCRIPT_URL) {
-        throw new Error("ระบบยังไม่พร้อมใช้งาน: กรุณาใส่ URL ของ Web App ในโค้ด index.html ให้เรียบร้อย");
+      if (APPS_SCRIPT_URL === "https://script.google.com/macros/s/AKfycbz87jP3uPB1vEUCjZG5vhsJ5wA19AbZ8cfofFqDLXednFO6P20eHEIQYlXsuS3A2YUSJA/exec" || !APPS_SCRIPT_URL) {
+        throw new Error("ระบบยังไม่พร้อมใช้งาน: กรุณาใส่ URL ของ Web App ในโค้ด index.html");
       }
       
       showLoading(true);
@@ -377,7 +461,6 @@
           options = {
             method: 'POST',
             body: JSON.stringify({ action: action, data: data }),
-            // สำคัญ: ใช้ text/plain ป้องกัน CORS preflight บน Browser
             headers: { 'Content-Type': 'text/plain;charset=utf-8' } 
           };
         } else {
@@ -403,21 +486,16 @@
       else overlay.classList.remove('active');
     }
 
-    // เมื่อเปิดเว็บขึ้นมา
     function initApp() {
-      // ตรวจสอบว่ามาจากการสแกน QR หรือไม่
       const scanId = getUrlParameter('id');
       if (scanId) {
         document.getElementById('extinguisherId').value = scanId;
-        switchTab('inspection'); // เด้งไปหน้าตรวจสอบทันที
+        switchTab('inspection'); 
       }
       
-      // โหลดข้อมูลมารอ
       if (APPS_SCRIPT_URL !== "YOUR_WEB_APP_URL_HERE") {
         loadInventory();
         loadReports();
-      } else {
-        alert("กรุณานำ URL ของ Web App จาก Google Apps Script มาใส่ในไฟล์ index.html บรรทัดที่ระบุไว้ก่อนครับ");
       }
     }
 
@@ -429,7 +507,7 @@
     }
 
     // ==========================================
-    // Tab 1: ทะเบียน (ดัดแปลงเรียก Fetch API)
+    // Tab 1: ทะเบียน
     // ==========================================
     async function submitInventory(event) {
       event.preventDefault();
@@ -470,7 +548,7 @@
             <td class="px-3 py-3 text-gray-500 text-xs">${row.loc || '-'}</td>
             <td class="px-3 py-3 text-center flex justify-center space-x-1">
               <button onclick="openEditInvModal('${row.id}', '${row.type}', '${row.loc}')" class="text-blue-500 bg-blue-50 p-1.5 rounded-lg">✏️</button>
-              <button onclick="printQR('${row.id}')" class="text-indigo-500 bg-indigo-50 p-1.5 rounded-lg" title="พิมพ์ QR Code">🖨️</button>
+              <button onclick="printQR('${row.id}')" class="text-indigo-500 bg-indigo-50 p-1.5 rounded-lg">🖨️</button>
             </td>
           </tr>`;
         });
@@ -482,12 +560,7 @@
 
     function openEditInvModal(id, type, loc) {
       document.getElementById('edit-inv-id').value = id;
-      const selectType = document.getElementById('edit-inv-type');
-      for(let i=0; i<selectType.options.length; i++) {
-        if(selectType.options[i].value.includes(type) || type.includes(selectType.options[i].value)) {
-          selectType.selectedIndex = i; break;
-        }
-      }
+      document.getElementById('edit-inv-type').value = type;
       document.getElementById('edit-inv-loc').value = loc;
       document.getElementById('editInvModal').classList.remove('hidden');
     }
@@ -517,9 +590,7 @@
       }
     }
 
-    // ฟังก์ชันพิมพ์ QR ย้อนหลังแบบอัตโนมัติ 
     function printQR(id) {
-      // ดึง URL ปัจจุบันของหน้าเว็บ GitHub Pages ไปใช้สร้าง QR Code เลย
       const baseUrl = window.location.href.split('?')[0]; 
       const appUrl = baseUrl + "?id=" + encodeURIComponent(id);
       
@@ -554,7 +625,7 @@
 
 
     // ==========================================
-    // Tab 2: ตรวจเช็ค
+    // Tab 2: ตรวจเช็ค (แบบใหม่)
     // ==========================================
     let html5QrcodeScanner = null;
 
@@ -610,11 +681,24 @@
       btn.innerText = "กำลังบันทึก..."; btn.disabled = true;
       
       const form = document.getElementById('inspectionForm');
+      
+      // คำนวณสถานะภาพรวม
+      const isAllPass = (
+        form.gauge.value === 'ผ่าน' && 
+        form.sealPin.value === 'ผ่าน' && 
+        form.hose.value === 'ผ่าน' && 
+        form.cylinder.value === 'ผ่าน'
+      );
+      const overall = isAllPass ? 'ปกติ' : 'ชำรุด';
+
       const data = {
-        extinguisherId: form.extinguisherId.value,
+        extinguisherId: form.extinguisherId.value.toUpperCase(),
         inspector: form.inspector.value,
-        condition: form.condition.value,
-        pressure: form.pressure.value,
+        gauge: form.gauge.value,
+        sealPin: form.sealPin.value,
+        hose: form.hose.value,
+        cylinder: form.cylinder.value,
+        overallStatus: overall,
         notes: form.notes.value
       };
 
@@ -622,6 +706,13 @@
         const res = await fetchAPI('addReport', data);
         document.getElementById("formContainer").classList.add("hidden");
         document.getElementById("successMessage").classList.remove("hidden");
+        
+        const feedback = document.getElementById("resultFeedback");
+        if(isAllPass) {
+          feedback.innerHTML = `<span class="text-green-600 font-bold">สถานะ: ปกติ (พร้อมใช้งาน)</span>`;
+        } else {
+          feedback.innerHTML = `<span class="text-red-600 font-bold">สถานะ: ชำรุด (กรุณาแจ้งซ่อม)</span>`;
+        }
         loadReports(); 
       } catch(err) {
         alert("ข้อผิดพลาด: " + err.message);
@@ -685,17 +776,16 @@
       }
       let html = '';
       data.forEach(row => {
-        let isOk = (row.status && row.status.indexOf('ปกติ') !== -1);
+        let isOk = (row.status === 'ปกติ');
         let sClass = isOk ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600';
-        let sText = isOk ? 'ปกติ' : 'ชำรุด';
         
         html += `<tr class="bg-white border-b border-gray-50">
           <td class="px-3 py-3 font-medium text-gray-900">${row.id}</td>
           <td class="px-2 py-3 text-gray-500 text-xs">${row.date}</td>
-          <td class="px-2 py-3 text-center"><span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-medium ${sClass}">${sText}</span></td>
+          <td class="px-2 py-3 text-center"><span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-medium ${sClass}">${row.status || '-'}</span></td>
           <td class="px-3 py-3 text-center flex justify-center space-x-1">
             <button onclick="openEditModal('${row.id}', '${row.status}')" class="text-blue-500 bg-blue-50 p-1.5 rounded-lg">✏️</button>
-            <button onclick="printRecord('${row.id}', '${row.date}', '${row.status}', '${row.inspector}')" class="text-gray-500 bg-gray-100 p-1.5 rounded-lg">🖨️</button>
+            <button onclick="printRecord('${row.id}', '${row.date}', '${row.status}', '${row.inspector}', '${row.gauge}', '${row.sealPin}', '${row.hose}', '${row.cylinder}')" class="text-gray-500 bg-gray-100 p-1.5 rounded-lg">🖨️</button>
           </td>
         </tr>`;
       });
@@ -704,12 +794,7 @@
 
     function openEditModal(id, status) {
       document.getElementById('edit-id').value = id;
-      const selectStatus = document.getElementById('edit-status');
-      for(let i=0; i<selectStatus.options.length; i++) {
-        if(selectStatus.options[i].value.includes(status) || status.includes(selectStatus.options[i].value)) {
-          selectStatus.selectedIndex = i; break;
-        }
-      }
+      document.getElementById('edit-status').value = status;
       document.getElementById('editModal').classList.remove('hidden');
     }
     
@@ -735,13 +820,23 @@
       }
     }
 
-    function printRecord(id, date, status, inspector) {
+    function printRecord(id, date, status, inspector, gauge, sealPin, hose, cylinder) {
       document.getElementById('print-id').innerText = id;
       document.getElementById('print-date').innerText = date;
-      document.getElementById('print-status').innerText = status;
       document.getElementById('print-inspector').innerText = inspector;
+      document.getElementById('print-status').innerText = status;
+      
+      // ตั้งค่าสีสถานะในใบพิมพ์
+      document.getElementById('print-status').className = status === 'ปกติ' ? 'text-green-600 font-bold' : 'text-red-600 font-bold';
+
+      // พิมพ์รายการ 4 ข้อ
+      const getIcon = (val) => val === 'ผ่าน' ? '✅ ผ่าน' : (val === 'ไม่ผ่าน' ? '❌ ไม่ผ่าน' : '-');
+      document.getElementById('print-gauge').innerText = getIcon(gauge);
+      document.getElementById('print-seal').innerText = getIcon(sealPin);
+      document.getElementById('print-hose').innerText = getIcon(hose);
+      document.getElementById('print-cylinder').innerText = getIcon(cylinder);
+
       document.getElementById('print-sign-name').innerText = inspector;
-      document.getElementById('print-sign-date').innerText = date;
       
       const printSec = document.getElementById('print-section');
       printSec.classList.remove('hidden');
