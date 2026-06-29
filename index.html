@@ -462,7 +462,7 @@
   <!-- ================= สคริปต์หลัก ================= -->
   <script>
     // ⚠️ นำ URL ของ Web App จาก Google Apps Script มาวางแทนที่ด้านล่างนี้ ⚠️
-    const APPS_SCRIPT_URL = "YOUR_WEB_APP_URL_HERE"; 
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz87jP3uPB1vEUCjZG5vhsJ5wA19AbZ8cfofFqDLXednFO6P20eHEIQYlXsuS3A2YUSJA/exec"; 
     
     let allReports = [];
 
@@ -507,7 +507,7 @@
     }
 
     async function fetchAPI(action, data = null) {
-      if (APPS_SCRIPT_URL === "https://script.google.com/macros/s/AKfycbz87jP3uPB1vEUCjZG5vhsJ5wA19AbZ8cfofFqDLXednFO6P20eHEIQYlXsuS3A2YUSJA/exec" || !APPS_SCRIPT_URL) {
+      if (APPS_SCRIPT_URL === "https://script.google.com/u/0/home/projects/1o-aQ6E_SO2TTnKkxVeTHKdXxteIdXyPkXovyxyyVIPyTZhf3zvAGkQzB/edit" || !APPS_SCRIPT_URL) {
         throw new Error("ระบบยังไม่พร้อม: กรุณาใส่ URL ของ Web App ในโค้ด index.html");
       }
       
