@@ -39,16 +39,31 @@
     }
 
     /* Scanner UI */
-    #reader { width: 100%; border: none !important; }
-    #reader video { object-fit: cover !important; border-radius: 16px; }
+    #reader { width: 100%; min-height: 320px; border: none !important; }
+    #reader video {
+      width: 100% !important;
+      min-height: 320px;
+      object-fit: cover !important;
+      border-radius: 18px;
+    }
+    #reader canvas { max-width: 100%; border-radius: 18px; }
+    #reader__scan_region { padding: 0 !important; }
     #reader__dashboard_section_csr span { display: none !important; }
     #reader button {
       background-color: #f1f5f9; color: #0f172a; border: none;
-      padding: 10px 20px; border-radius: 8px; font-family: 'Sarabun', sans-serif;
-      margin-top: 10px; font-weight: 600; font-size: 16px; transition: all 0.2s;
+      padding: 12px 20px; border-radius: 12px; font-family: 'Sarabun', sans-serif;
+      margin-top: 10px; font-weight: 700; font-size: 16px; transition: all 0.2s;
     }
     #reader button:hover { background-color: #e2e8f0; }
     #reader span a { display: none; }
+    .camera-status { border: 1px solid #bfdbfe; background: #eff6ff; color: #1e3a8a; }
+    .camera-status.success { border-color: #bbf7d0; background: #f0fdf4; color: #166534; }
+    .camera-status.error { border-color: #fecdd3; background: #fff1f2; color: #be123c; }
+    .camera-primary-action:disabled { opacity: 0.7; cursor: wait; }
+    @media (max-width: 640px) {
+      #reader, #reader video { min-height: 58vh; }
+      #reader-container { min-height: 58vh !important; }
+    }
     
     #loading-overlay { display: none; }
     #loading-overlay.active { display: flex; }
@@ -284,14 +299,26 @@
             <h2 class="text-3xl font-bold text-slate-900 mb-3">สแกน QR Code</h2>
             <p class="text-base text-slate-500 mb-8 leading-relaxed">กรุณาหันกล้องไปที่ QR Code<br/>ซึ่งติดอยู่บริเวณตัวถังดับเพลิง</p>
             
-            <div id="reader-container" class="rounded-2xl overflow-hidden shadow-inner bg-slate-100 mb-6 min-h-[300px] flex items-center justify-center border-2 border-slate-200">
+            <div id="camera-status" role="status" aria-live="polite" class="camera-status rounded-2xl px-4 py-3 mb-4 text-left text-sm font-bold leading-relaxed">
+              แตะปุ่มเปิดกล้อง แล้วอนุญาตให้ใช้กล้องเมื่อระบบถาม
+            </div>
+
+            <div id="reader-container" class="rounded-2xl overflow-hidden shadow-inner bg-slate-100 mb-5 min-h-[320px] flex items-center justify-center border-2 border-slate-200">
               <div id="reader" class="border-0 bg-white w-full"></div>
             </div>
-            
-            <label class="bg-slate-800 text-white w-full block py-4 rounded-xl font-bold text-lg shadow-lg cursor-pointer hover:bg-black transition border-2 border-slate-900">
-              📂 อัปโหลดรูปภาพ QR แทน
-              <input type="file" accept="image/*" class="hidden" onchange="scanFromFile(event)">
-            </label>
+
+            <div class="grid grid-cols-1 gap-3">
+              <button type="button" id="btnStartCamera" onclick="startCameraScanner()" aria-label="เปิดกล้องเพื่อสแกน QR Code" class="camera-primary-action bg-blue-600 hover:bg-blue-700 text-white w-full py-5 rounded-2xl font-bold text-xl shadow-[0_4px_14px_rgba(37,99,235,0.35)] active:scale-95 transition">
+                เปิดกล้องสแกน QR
+              </button>
+              <button type="button" id="btnStopCamera" onclick="stopScanner()" class="hidden bg-slate-100 hover:bg-slate-200 text-slate-800 w-full py-4 rounded-xl font-bold text-lg transition border border-slate-200">
+                ปิดกล้องชั่วคราว
+              </button>
+              <label class="bg-slate-800 text-white w-full block py-4 rounded-xl font-bold text-lg shadow-lg cursor-pointer hover:bg-black transition border-2 border-slate-900">
+                ถ่ายรูปหรือเลือกรูป QR แทน
+                <input type="file" accept="image/*" class="hidden" onchange="scanFromFile(event)">
+              </label>
+            </div>
           </div>
         </div>
       </div>
@@ -607,6 +634,7 @@
     let currentRole = null; // 'admin' หรือ 'inspector'
     let currentExtinguisherHistory = []; // สำหรับกรองประวัติเฉพาะถัง
     let html5QrcodeScanner = null;
+    let isScannerRunning = false;
     let allInventory = []; 
     let allReports = []; 
 
@@ -674,7 +702,7 @@
     function handleLogout() {
       if(confirm('ออกจากระบบ?')) {
         currentRole = null;
-        if(html5QrcodeScanner) { html5QrcodeScanner.clear(); html5QrcodeScanner = null; }
+        stopScanner();
         document.getElementById('main-app').classList.add('hidden');
         document.getElementById('login-screen').classList.remove('hidden');
         document.getElementById('loginForm').reset();
@@ -1000,38 +1028,137 @@
 
     // ================== ฝั่ง Inspector (สแกน & ฟอร์ม) ==================
     function startScanView() {
+      stopScanner(false);
       document.getElementById('tab-inspector-scan').classList.remove('hidden');
       document.getElementById('tab-inspector-form').classList.add('hidden');
       window.scrollTo(0,0);
+      setCameraButtons(false);
+      setCameraStatus('แตะปุ่มเปิดกล้อง แล้วอนุญาตให้ใช้กล้องเมื่อระบบถาม', 'info');
+      setTimeout(() => document.getElementById('btnStartCamera')?.focus(), 80);
+    }
 
-      if(html5QrcodeScanner === null) {
-        html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: {width: 250, height: 250}, rememberLastUsedCamera: true }, false);
+    function setCameraButtons(isRunning) {
+      const startBtn = document.getElementById('btnStartCamera');
+      const stopBtn = document.getElementById('btnStopCamera');
+      if(startBtn) {
+        startBtn.disabled = isRunning;
+        startBtn.classList.toggle('hidden', isRunning);
       }
-      html5QrcodeScanner.render(onScanSuccess, () => {});
+      if(stopBtn) stopBtn.classList.toggle('hidden', !isRunning);
     }
 
-    function stopScanner() {
-      if(html5QrcodeScanner) html5QrcodeScanner.clear();
+    function setCameraStatus(message, type = 'info') {
+      const status = document.getElementById('camera-status');
+      if(!status) return;
+      status.textContent = message;
+      status.className = 'camera-status rounded-2xl px-4 py-3 mb-4 text-left text-sm font-bold leading-relaxed' + (type === 'success' ? ' success' : (type === 'error' ? ' error' : ''));
     }
 
-    function onScanSuccess(decodedText) {
-      stopScanner();
+    function getCameraErrorMessage(err) {
+      const raw = String(err?.name || err?.message || err || '');
+      if(!window.isSecureContext && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+        return 'กล้องใช้งานได้เมื่อเปิดผ่าน HTTPS เท่านั้น กรุณาเปิดจากลิงก์ Web App ที่ deploy แล้ว';
+      }
+      if(raw.includes('NotAllowed') || raw.includes('Permission') || raw.includes('denied')) {
+        return 'ยังไม่ได้อนุญาตกล้อง กรุณากดอนุญาตในเบราว์เซอร์ แล้วลองเปิดกล้องอีกครั้ง';
+      }
+      if(raw.includes('NotFound') || raw.includes('Overconstrained')) {
+        return 'ไม่พบกล้องบนอุปกรณ์นี้ ลองใช้ปุ่มถ่ายรูปหรือเลือกรูป QR แทน';
+      }
+      return 'เปิดกล้องไม่สำเร็จ กรุณาลองใหม่ หรือใช้ปุ่มถ่ายรูป/เลือกรูป QR แทน';
+    }
+
+    async function startCameraScanner() {
+      if(!window.Html5Qrcode) {
+        setCameraStatus('โหลดระบบสแกน QR ไม่สำเร็จ กรุณารีเฟรชหน้าเว็บแล้วลองใหม่', 'error');
+        return;
+      }
+      if(!window.isSecureContext && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+        setCameraStatus(getCameraErrorMessage(), 'error');
+        return;
+      }
+
+      const startBtn = document.getElementById('btnStartCamera');
+      if(startBtn) startBtn.disabled = true;
+      setCameraStatus('กำลังเปิดกล้อง...', 'info');
+
+      try {
+        if(html5QrcodeScanner) await stopScanner(false);
+        html5QrcodeScanner = new Html5Qrcode('reader');
+        const config = {
+          fps: 12,
+          qrbox: (viewfinderWidth, viewfinderHeight) => {
+            const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+            const boxSize = Math.min(320, Math.floor(minEdge * 0.72));
+            return { width: boxSize, height: boxSize };
+          },
+          aspectRatio: 1.333
+        };
+        await html5QrcodeScanner.start({ facingMode: 'environment' }, config, onScanSuccess, () => {});
+        isScannerRunning = true;
+        setCameraButtons(true);
+        setCameraStatus('กำลังสแกน QR ให้วาง QR Code ให้อยู่กลางกรอบ', 'success');
+      } catch(err) {
+        try { if(html5QrcodeScanner) await html5QrcodeScanner.clear(); } catch(clearErr) {}
+        isScannerRunning = false;
+        html5QrcodeScanner = null;
+        setCameraButtons(false);
+        setCameraStatus(getCameraErrorMessage(err), 'error');
+      }
+    }
+
+    async function stopScanner(resetStatus = true) {
+      const scanner = html5QrcodeScanner;
+      const wasRunning = isScannerRunning;
       html5QrcodeScanner = null;
-      let finalId = decodedText;
-      if(finalId.includes('?id=')) finalId = finalId.split('?id=')[1];
-      else if(finalId.includes('entry.')) finalId = finalId.split('=').pop();
-      
+      isScannerRunning = false;
+      setCameraButtons(false);
+      try {
+        if(scanner) {
+          if(wasRunning) await scanner.stop();
+          await scanner.clear();
+        }
+      } catch(err) {}
+      if(resetStatus) setCameraStatus('แตะปุ่มเปิดกล้อง แล้วอนุญาตให้ใช้กล้องเมื่อระบบถาม', 'info');
+    }
+
+    async function onScanSuccess(decodedText) {
+      await stopScanner(false);
+      let finalId = String(decodedText || '').trim();
+      try {
+        const scannedUrl = new URL(finalId);
+        finalId = scannedUrl.searchParams.get('id') || finalId;
+      } catch(err) {
+        if(finalId.includes('?id=')) finalId = finalId.split('?id=')[1].split('&')[0];
+        else if(finalId.includes('entry.')) finalId = finalId.split('=').pop();
+      }
+      try { finalId = decodeURIComponent(finalId).trim(); } catch(err) { finalId = finalId.trim(); }
+      if(!finalId) {
+        setCameraStatus('ไม่พบรหัสถังใน QR Code กรุณาลองสแกนอีกครั้ง', 'error');
+        setCameraButtons(false);
+        return;
+      }
       loadExtinguisherData(finalId);
     }
 
-    function scanFromFile(event) {
+    async function scanFromFile(event) {
       if (event.target.files.length == 0) return;
       const file = event.target.files[0];
-      const html5QrCode = new Html5Qrcode("reader"); 
-      html5QrCode.scanFile(file, true)
-      .then(text => { onScanSuccess(text); })
-      .catch(err => alert("ไม่พบ QR Code หรือรูปภาพไม่ชัดเจน"));
-      event.target.value = '';
+      let fileScanner = null;
+      try {
+        await stopScanner(false);
+        setCameraStatus('กำลังอ่าน QR จากรูปภาพ...', 'info');
+        fileScanner = new Html5Qrcode('reader');
+        const text = await fileScanner.scanFile(file, true);
+        await fileScanner.clear();
+        await onScanSuccess(text);
+      } catch(err) {
+        setCameraStatus('ไม่พบ QR Code หรือรูปภาพไม่ชัด กรุณาถ่ายใหม่ให้ QR อยู่เต็มกรอบ', 'error');
+        alert('ไม่พบ QR Code หรือรูปภาพไม่ชัดเจน');
+      } finally {
+        try { if(fileScanner) await fileScanner.clear(); } catch(err) {}
+        event.target.value = '';
+      }
     }
 
     async function loadExtinguisherData(id) {
