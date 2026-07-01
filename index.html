@@ -11,7 +11,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   
-  <!-- ใช้เวอร์ชันปกติ เพื่อให้เรียกใช้ Html5Qrcode แบบ Custom ได้ -->
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
 
@@ -39,21 +38,43 @@
       #app-header, nav { display: none !important; }
     }
 
-    /* Custom Scanner UI */
-    #reader { width: 100%; min-height: 250px; background-color: #000; border-radius: 12px; overflow: hidden; position: relative;}
-    #reader video { object-fit: cover !important; width: 100% !important; min-height: 250px; }
-    #reader canvas { display: none !important; } /* ซ่อน canvas ตอน scan */
+    /* Scanner UI */
+    #reader { width: 100%; min-height: 320px; border: none !important; }
+    #reader video {
+      width: 100% !important;
+      min-height: 320px;
+      object-fit: cover !important;
+      border-radius: 18px;
+    }
+    #reader canvas { max-width: 100%; border-radius: 18px; }
+    #reader__scan_region { padding: 0 !important; }
+    #reader__dashboard_section_csr span { display: none !important; }
+    #reader button {
+      background-color: #f1f5f9; color: #0f172a; border: none;
+      padding: 12px 20px; border-radius: 12px; font-family: 'Sarabun', sans-serif;
+      margin-top: 10px; font-weight: 700; font-size: 16px; transition: all 0.2s;
+    }
+    #reader button:hover { background-color: #e2e8f0; }
+    #reader span a { display: none; }
+    .camera-status { border: 1px solid #bfdbfe; background: #eff6ff; color: #1e3a8a; }
+    .camera-status.success { border-color: #bbf7d0; background: #f0fdf4; color: #166534; }
+    .camera-status.error { border-color: #fecdd3; background: #fff1f2; color: #be123c; }
+    .camera-primary-action:disabled { opacity: 0.7; cursor: wait; }
+    @media (max-width: 640px) {
+      #reader, #reader video { min-height: 58vh; }
+      #reader-container { min-height: 58vh !important; }
+    }
     
     #loading-overlay { display: none; }
     #loading-overlay.active { display: flex; }
     
-    /* Custom Scrollbar */
-    .table-container::-webkit-scrollbar { height: 6px; }
-    .table-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    /* Custom Scrollbar for compact tables */
+    .table-container::-webkit-scrollbar { height: 8px; }
+    .table-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
     .table-container::-webkit-scrollbar-track { background: #f1f5f9; }
     
-    /* Mobile Nav Buttons - Compact */
-    .nav-btn { color: #64748b; padding: 4px 0; }
+    /* Mobile Nav Buttons */
+    .nav-btn { color: #64748b; }
     .nav-btn.active { color: #e11d48; font-weight: 700; }
     .nav-btn.active .icon-bg { background-color: #ffe4e6; color: #e11d48; border-radius: 9999px; }
 
@@ -63,122 +84,118 @@
     .nav-btn-desktop.active { color: #ffffff; background-color: #e11d48; border-color: #be123c; box-shadow: 0 4px 10px rgba(225, 29, 72, 0.4); }
   </style>
 </head>
-<body class="text-slate-800 min-h-screen text-sm sm:text-base">
+<body class="text-slate-800 min-h-screen text-base">
 
-  <!-- ================= Loading Overlay ================= -->
   <div id="loading-overlay" class="fixed inset-0 bg-white/90 backdrop-blur-sm z-[200] items-center justify-center flex-col">
-    <div class="animate-spin rounded-full h-12 w-12 border-b-4 border-rose-600 mb-4"></div>
-    <p class="text-slate-800 text-sm font-bold" id="loading-text">กำลังประสานข้อมูล...</p>
+    <div class="animate-spin rounded-full h-14 w-14 border-b-4 border-rose-600 mb-4"></div>
+    <p class="text-slate-800 text-base font-bold" id="loading-text">กำลังประสานข้อมูล...</p>
   </div>
 
-  <!-- ================= หน้าเข้าสู่ระบบ (Login Screen) ================= -->
   <div id="login-screen" class="fixed inset-0 bg-slate-900 z-[100] flex items-center justify-center p-4">
-    <div class="bg-white rounded-[2rem] shadow-2xl p-6 md:p-10 w-full max-w-sm md:max-w-md">
-      <div class="text-center mb-6 border-b border-gray-100 pb-4">
-        <div class="inline-flex items-center justify-center w-16 h-16 bg-rose-100 text-rose-600 rounded-full mb-3 shadow-inner">
-          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"></path></svg>
+    <div class="bg-white rounded-[2rem] shadow-2xl p-8 md:p-10 w-full max-w-md">
+      <div class="text-center mb-8 border-b border-gray-100 pb-6">
+        <div class="inline-flex items-center justify-center w-20 h-20 bg-rose-100 text-rose-600 rounded-full mb-4 shadow-inner">
+          <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"></path></svg>
         </div>
-        <h2 class="text-2xl font-bold text-gray-900 tracking-tight">FireCheck System</h2>
-        <p class="text-sm text-gray-500 mt-1">เลือกระดับผู้ใช้งานของคุณ</p>
+        <h2 class="text-3xl font-bold text-gray-900 tracking-tight">FireCheck System</h2>
+        <p class="text-base text-gray-500 mt-2">เลือกระดับผู้ใช้งานของคุณ</p>
       </div>
       
       <!-- พนักงานตรวจเช็คเข้าได้เลย -->
-      <div class="mb-6">
-        <button onclick="loginAsInspector()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl transition shadow-[0_4px_14px_rgba(37,99,235,0.4)] flex items-center justify-center gap-2 text-base">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-          ตรวจเช็ค (เริ่มสแกนทันที)
+      <div class="mb-8">
+        <button onclick="loginAsInspector()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition shadow-[0_4px_14px_rgba(37,99,235,0.4)] flex items-center justify-center gap-2 text-lg">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+          ตรวจเช็ค(เริ่มสแกนทันที)
         </button>
       </div>
 
-      <div class="relative flex py-2 items-center mb-6">
+      <div class="relative flex py-2 items-center mb-8">
         <div class="flex-grow border-t border-gray-200"></div>
-        <span class="flex-shrink-0 mx-3 text-gray-400 text-xs">หรือ</span>
+        <span class="flex-shrink-0 mx-4 text-gray-400 text-sm">หรือ</span>
         <div class="flex-grow border-t border-gray-200"></div>
       </div>
 
       <!-- Admin เข้าผ่านรหัส -->
-      <form id="loginForm" onsubmit="loginAsAdmin(event)" class="space-y-3 bg-slate-50 p-4 md:p-6 rounded-2xl border border-slate-200 shadow-sm">
-        <h3 class="text-sm font-bold text-slate-800 mb-2 flex items-center gap-2">
-          <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+      <form id="loginForm" onsubmit="loginAsAdmin(event)" class="space-y-4 bg-slate-50 p-6 rounded-2xl border border-slate-200 shadow-sm">
+        <h3 class="text-base font-bold text-slate-800 mb-2 flex items-center gap-2">
+          <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
           เข้าสู่ระบบ Admin
         </h3>
         <div>
-          <input type="text" id="login-user" required placeholder="ชื่อผู้ใช้งาน (admin)" class="w-full px-3 py-3 bg-white border border-gray-300 rounded-xl transition text-sm">
+          <input type="text" id="login-user" required placeholder="ชื่อผู้ใช้งาน (admin)" class="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl transition text-base">
         </div>
         <div>
-          <input type="password" id="login-pass" required placeholder="รหัสผ่าน (1234)" class="w-full px-3 py-3 bg-white border border-gray-300 rounded-xl transition text-sm">
+          <input type="password" id="login-pass" required placeholder="รหัสผ่าน (1234)" class="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl transition text-base">
         </div>
-        <p id="login-error" class="hidden text-xs text-rose-600 text-center font-bold mt-1">❌ ข้อมูลไม่ถูกต้อง!</p>
-        <button type="submit" class="w-full bg-slate-800 hover:bg-black text-white font-bold py-3 rounded-xl transition mt-3 text-sm shadow-md">ล็อกอิน</button>
+        <p id="login-error" class="hidden text-sm text-rose-600 text-center font-bold mt-2">❌ ข้อมูลผู้ใช้งานไม่ถูกต้อง!</p>
+        <button type="submit" class="w-full bg-slate-800 hover:bg-black text-white font-bold py-3.5 rounded-xl transition mt-4 text-base shadow-md">เข้าสู่ระบบการจัดการ</button>
       </form>
     </div>
   </div>
 
-  <!-- ================= แอปพลิเคชันหลัก ================= -->
   <div id="main-app" class="hidden">
     
     <!-- แถบด้านบน (App Header) -->
-    <header id="app-header" class="fixed top-0 w-full text-white shadow-lg z-[40] px-4 md:px-8 py-2 md:py-3 flex justify-between items-center bg-slate-900">
-      <div class="flex items-center space-x-2 w-auto md:w-1/4">
-        <svg class="w-6 h-6 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"></path></svg>
-        <h1 id="header-title" class="font-bold text-base md:text-lg tracking-wide whitespace-nowrap">FireCheck</h1>
+    <header id="app-header" class="fixed top-0 w-full text-white shadow-lg z-[40] px-4 md:px-8 py-3 flex justify-between items-center bg-slate-900">
+      <div class="flex items-center space-x-3 w-auto md:w-1/4">
+        <svg class="w-7 h-7 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"></path></svg>
+        <h1 id="header-title" class="font-bold text-lg md:text-xl tracking-wide whitespace-nowrap">FireCheck</h1>
       </div>
 
       <!-- Desktop Navigation (เฉพาะจอใหญ่ + Admin) -->
-      <nav id="desktop-nav-admin" class="hidden flex-1 justify-center space-x-2 lg:space-x-4">
-        <button onclick="switchAdminTab('inventory')" id="btn-desktop-tab-inventory" class="nav-btn-desktop px-4 py-1.5 rounded-lg font-bold text-sm">ทะเบียนถัง</button>
-        <button onclick="switchAdminTab('report')" id="btn-desktop-tab-report" class="nav-btn-desktop px-4 py-1.5 rounded-lg font-bold text-sm">ประวัติการตรวจเช็ค</button>
+      <nav id="desktop-nav-admin" class="hidden flex-1 justify-center space-x-4">
+        <button onclick="switchAdminTab('inventory')" id="btn-desktop-tab-inventory" class="nav-btn-desktop px-6 py-2 rounded-xl font-bold text-base">ทะเบียนถัง</button>
+        <button onclick="switchAdminTab('report')" id="btn-desktop-tab-report" class="nav-btn-desktop px-6 py-2 rounded-xl font-bold text-base">ประวัติการตรวจเช็ค</button>
       </nav>
 
       <div class="flex justify-end w-auto md:w-1/4">
-        <button onclick="handleLogout()" class="text-slate-200 hover:text-white text-xs md:text-sm flex items-center space-x-1 md:space-x-2 bg-slate-800 hover:bg-slate-700 px-3 md:px-4 py-1.5 md:py-2 rounded-full transition border border-slate-600 font-bold shadow-sm">
+        <button onclick="handleLogout()" class="text-slate-200 hover:text-white text-sm flex items-center space-x-2 bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-full transition border border-slate-600 font-bold shadow-sm">
           <span>ออกระบบ</span>
-          <svg class="w-4 h-4 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
         </button>
       </div>
     </header>
 
-    <main class="p-3 md:p-6 max-w-6xl mx-auto pt-16 md:pt-24 pb-20 md:pb-10" id="app-content">
+    <main class="p-4 md:p-6 max-w-6xl mx-auto pt-24 pb-28 md:pb-10" id="app-content">
       
-      <!-- ================= ส่วนของ Admin: ทะเบียนประวัติ ================= -->
       <div id="tab-admin-inventory" class="hidden">
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 md:p-8 mb-4">
-          <div class="mb-4 border-l-4 border-slate-800 pl-3 md:pl-4">
-            <h2 class="text-lg md:text-2xl font-bold text-slate-900 leading-tight">ทะเบียนถังดับเพลิง</h2>
-            <p class="text-slate-500 mt-0.5 text-xs md:text-sm">เพิ่มลบและจัดการบัญชีรายชื่อถังดับเพลิงในระบบ</p>
+        <div class="bg-white rounded-[2rem] shadow-sm border border-slate-200 p-6 md:p-8 mb-6">
+          <div class="mb-6 border-l-4 border-slate-800 pl-4">
+            <h2 class="text-2xl font-bold text-slate-900 leading-tight">ทะเบียนถังดับเพลิง</h2>
+            <p class="text-slate-500 mt-1 text-sm">เพิ่มลบและจัดการบัญชีรายชื่อถังดับเพลิงในระบบ</p>
           </div>
 
-          <form id="inventoryForm" onsubmit="submitInventory(event)" class="space-y-3 mb-6 bg-slate-50 p-4 md:p-8 rounded-xl border border-slate-200 shadow-sm">
-            <h3 class="font-bold text-slate-800 text-sm md:text-lg flex items-center gap-1.5 mb-2">
-              <span class="bg-slate-200 p-1 rounded-md text-xs">➕</span> เพิ่มถังดับเพลิงใหม่
+          <form id="inventoryForm" onsubmit="submitInventory(event)" class="space-y-4 mb-10 bg-slate-50 p-6 md:p-8 rounded-2xl border border-slate-200 shadow-sm">
+            <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2 mb-2">
+              <span class="bg-slate-200 p-1.5 rounded-lg">➕</span> เพิ่มถังดับเพลิงใหม่
             </h3>
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-5">
               <div class="md:col-span-1">
-                <label class="block text-xs md:text-sm text-slate-700 font-bold mb-1">รหัสถัง (ID)</label>
-                <input type="text" id="newInvId" required placeholder="เช่น FE001" class="w-full px-3 md:px-4 py-2 md:py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-800 outline-none uppercase text-sm md:text-base">
+                <label class="block text-sm text-slate-700 font-bold mb-1.5">รหัสถัง (ID)</label>
+                <input type="text" id="newInvId" required placeholder="เช่น FE001" class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-slate-800 outline-none uppercase text-base">
               </div>
               <div class="md:col-span-1">
-                <label class="block text-xs md:text-sm text-slate-700 font-bold mb-1">ประเภทถัง</label>
-                <select id="newInvType" required class="w-full px-3 md:px-4 py-2 md:py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-800 outline-none bg-white text-sm md:text-base">
+                <label class="block text-sm text-slate-700 font-bold mb-1.5">ประเภทถัง</label>
+                <select id="newInvType" required class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-slate-800 outline-none bg-white text-base">
                   <option value="ผงเคมีแห้ง (Dry Chemical)">ผงเคมีแห้ง (Dry Chemical)</option>
                   <option value="CO2">CO2</option>
                   <option value="โฟม (Foam)">โฟม</option>
                 </select>
               </div>
               <div class="md:col-span-1">
-                <label class="block text-xs md:text-sm text-slate-700 font-bold mb-1">สถานที่ติดตั้ง</label>
-                <input type="text" id="newInvLocation" required placeholder="ระบุพิกัดหรือจุดติดตั้ง" class="w-full px-3 md:px-4 py-2 md:py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-800 outline-none text-sm md:text-base">
+                <label class="block text-sm text-slate-700 font-bold mb-1.5">สถานที่ติดตั้ง</label>
+                <input type="text" id="newInvLocation" required placeholder="ระบุพิกัดหรือจุดติดตั้ง" class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-slate-800 outline-none text-base">
               </div>
               <div class="md:col-span-1">
-                <label class="block text-xs md:text-sm text-slate-700 font-bold mb-1">วันที่รับเข้า</label>
-                <input type="date" id="newInvDateEntry" required class="w-full px-3 md:px-4 py-2 md:py-3 border border-slate-300 rounded-lg text-sm md:text-base">
+                <label class="block text-sm text-slate-700 font-bold mb-1.5">วันที่รับเข้า</label>
+                <input type="date" id="newInvDateEntry" required class="w-full px-4 py-3 border border-slate-300 rounded-xl text-base">
               </div>
               <div class="md:col-span-1">
-                <label class="block text-xs md:text-sm text-slate-700 font-bold mb-1">วันที่จำหน่าย (ถ้ามี)</label>
-                <input type="date" id="newInvDateDispose" class="w-full px-3 md:px-4 py-2 md:py-3 border border-slate-300 rounded-lg text-slate-500 text-sm md:text-base">
+                <label class="block text-sm text-slate-700 font-bold mb-1.5">วันที่จำหน่าย (ถ้ามี)</label>
+                <input type="date" id="newInvDateDispose" class="w-full px-4 py-3 border border-slate-300 rounded-xl text-slate-500 text-base">
               </div>
               <div class="md:col-span-1 flex items-end">
-                <button type="submit" id="btnGenQR" class="w-full bg-slate-800 hover:bg-black text-white font-bold py-2 md:py-3.5 rounded-lg shadow-[0_2px_10px_rgba(0,0,0,0.2)] transition text-sm md:text-base">
+                <button type="submit" id="btnGenQR" class="w-full bg-slate-800 hover:bg-black text-white font-bold py-3.5 rounded-xl shadow-[0_4px_14px_rgba(0,0,0,0.2)] transition text-base">
                   บันทึกเข้าระบบ
                 </button>
               </div>
@@ -186,28 +203,28 @@
           </form>
 
           <div>
-            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-3 mb-3 border-t pt-4 md:pt-8 border-slate-100">
-              <h3 class="font-bold text-slate-800 text-base md:text-xl">รายการในระบบ</h3>
+            <div class="flex flex-col md:flex-row md:justify-between md:items-end gap-4 mb-4 border-t pt-8 border-slate-100">
+              <h3 class="font-bold text-slate-800 text-xl">รายการในระบบ</h3>
               <div class="flex flex-wrap gap-2">
-                <button onclick="exportInventoryExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs md:text-sm font-bold px-3 py-1.5 md:py-2.5 rounded-lg shadow-sm transition">📥 ส่งออก Excel</button>
-                <button onclick="printInventoryList()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs md:text-sm font-bold px-3 py-1.5 md:py-2.5 rounded-lg shadow-sm transition">🖨️ พิมพ์รายงาน</button>
-                <button onclick="loadInventory()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs md:text-sm font-bold px-3 py-1.5 md:py-2.5 rounded-lg shadow-sm transition">🔄 รีเฟรช</button>
+                <button onclick="exportInventoryExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold px-4 py-2.5 rounded-xl shadow-sm transition">📥 ส่งออก Excel</button>
+                <button onclick="printInventoryList()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold px-4 py-2.5 rounded-xl shadow-sm transition">🖨️ พิมพ์รายงาน</button>
+                <button onclick="loadInventory()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold px-4 py-2.5 rounded-xl shadow-sm transition">🔄 รีเฟรชข้อมูล</button>
               </div>
             </div>
-            <div class="table-container overflow-x-auto rounded-xl border border-slate-200 shadow-sm">
+            <div class="table-container overflow-x-auto rounded-2xl border border-slate-200 shadow-sm">
               <table class="w-full text-left whitespace-nowrap">
-                <thead class="text-xs text-slate-600 bg-slate-100 uppercase font-bold border-b border-slate-300">
+                <thead class="text-sm text-slate-600 bg-slate-100 uppercase font-bold border-b border-slate-300">
                   <tr>
-                    <th class="px-3 md:px-5 py-3">ID</th>
-                    <th class="px-3 md:px-5 py-3">ประเภท</th>
-                    <th class="px-3 md:px-5 py-3">ตำแหน่ง</th>
-                    <th class="px-3 md:px-5 py-3">รับเข้า</th>
-                    <th class="px-3 md:px-5 py-3">จำหน่าย</th>
-                    <th class="px-3 md:px-5 py-3 text-center">จัดการ</th>
+                    <th class="px-5 py-4">ID</th>
+                    <th class="px-5 py-4">ประเภท</th>
+                    <th class="px-5 py-4">ตำแหน่ง</th>
+                    <th class="px-5 py-4">รับเข้า</th>
+                    <th class="px-5 py-4">จำหน่าย</th>
+                    <th class="px-5 py-4 text-center">จัดการ</th>
                   </tr>
                 </thead>
-                <tbody id="inventoryTableBody" class="divide-y divide-slate-100 text-xs md:text-sm">
-                  <tr><td colspan="6" class="text-center py-6 text-slate-400">กำลังโหลดข้อมูล...</td></tr>
+                <tbody id="inventoryTableBody" class="divide-y divide-slate-100 text-base">
+                  <tr><td colspan="6" class="text-center py-10 text-slate-400">กำลังโหลดข้อมูล...</td></tr>
                 </tbody>
               </table>
             </div>
@@ -215,275 +232,257 @@
         </div>
       </div>
 
-      <!-- ================= ส่วนของ Admin: ประวัติการตรวจเช็ค ================= -->
       <div id="tab-admin-report" class="hidden">
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 md:p-8 mb-4">
-          <div class="mb-4 border-l-4 border-blue-600 pl-3 md:pl-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <div class="bg-white rounded-[2rem] shadow-sm border border-slate-200 p-6 md:p-8 mb-6">
+          <div class="mb-6 border-l-4 border-blue-600 pl-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <h2 class="text-lg md:text-2xl font-bold text-slate-900 leading-tight">รายงานประวัติการตรวจเช็ค</h2>
-              <p class="text-slate-500 mt-0.5 text-xs md:text-sm">ข้อมูลรายงานผลการประเมินย้อนหลังทั้งหมด</p>
+              <h2 class="text-2xl font-bold text-slate-900 leading-tight">รายงานประวัติการตรวจเช็ค</h2>
+              <p class="text-slate-500 mt-1 text-sm">ข้อมูลรายงานผลการประเมินย้อนหลังทั้งหมด</p>
             </div>
-            <button onclick="exportReportExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 md:py-2.5 rounded-lg font-bold text-xs md:text-sm shadow-md transition self-start md:self-auto">
+            <button onclick="exportReportExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md transition self-start md:self-auto">
               📥 ส่งออก Excel
             </button>
           </div>
           
-          <!-- ส่วนตัวกรอง (Filters) -->
-          <div class="flex flex-col sm:flex-row gap-3 mb-5 bg-blue-50/50 p-4 rounded-xl border border-blue-100">
+          <div class="flex flex-col sm:flex-row gap-4 mb-8 bg-blue-50/50 p-5 rounded-2xl border border-blue-100">
             <div class="flex-1">
-              <label class="block text-xs md:text-sm font-bold text-blue-900 mb-1">ค้นหาเดือน</label>
-              <input type="month" id="adminFilterMonth" onchange="filterAdminReports()" class="w-full px-3 py-2 border border-blue-200 rounded-lg text-sm md:text-base bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+              <label class="block text-sm font-bold text-blue-900 mb-1.5">ค้นหาเดือน</label>
+              <input type="month" id="adminFilterMonth" onchange="filterAdminReports()" class="w-full px-4 py-2.5 border border-blue-200 rounded-xl text-base bg-white focus:ring-2 focus:ring-blue-500 outline-none">
             </div>
             <div class="flex-1">
-              <label class="block text-xs md:text-sm font-bold text-blue-900 mb-1">ค้นหารหัสถัง (ID)</label>
-              <input type="text" id="adminFilterId" onkeyup="filterAdminReports()" placeholder="กรอกรหัสถัง..." class="w-full px-3 py-2 border border-blue-200 rounded-lg text-sm md:text-base uppercase bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+              <label class="block text-sm font-bold text-blue-900 mb-1.5">ค้นหารหัสถัง (ID)</label>
+              <input type="text" id="adminFilterId" onkeyup="filterAdminReports()" placeholder="กรอกรหัสถัง..." class="w-full px-4 py-2.5 border border-blue-200 rounded-xl text-base uppercase bg-white focus:ring-2 focus:ring-blue-500 outline-none">
             </div>
-            <div class="flex items-end mt-1 sm:mt-0">
-              <button onclick="loadReports()" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold text-sm md:text-base shadow-sm transition">
+            <div class="flex items-end mt-2 sm:mt-0">
+              <button onclick="loadReports()" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold text-base shadow-[0_4px_14px_rgba(37,99,235,0.3)] transition">
                 🔄 รีเฟรชตาราง
               </button>
             </div>
           </div>
 
-          <div class="table-container overflow-x-auto rounded-xl border border-slate-200 shadow-sm">
+          <div class="table-container overflow-x-auto rounded-2xl border border-slate-200 shadow-sm">
             <table class="w-full text-left whitespace-nowrap">
-              <thead class="text-xs text-slate-600 bg-slate-100 uppercase font-bold border-b border-slate-300">
+              <thead class="text-sm text-slate-600 bg-slate-100 uppercase font-bold border-b border-slate-300">
                 <tr>
-                  <th class="px-3 md:px-5 py-3">ID</th>
-                  <th class="px-3 md:px-5 py-3">วันที่และเวลา</th>
-                  <th class="px-3 md:px-5 py-3 text-center">สถานะ</th>
-                  <th class="px-2 md:px-4 py-3 text-center text-slate-500">มาตรวัด</th>
-                  <th class="px-2 md:px-4 py-3 text-center text-slate-500">ซีล</th>
-                  <th class="px-2 md:px-4 py-3 text-center text-slate-500">สายฉีด</th>
-                  <th class="px-2 md:px-4 py-3 text-center text-slate-500">ตัวถัง</th>
-                  <th class="px-3 md:px-5 py-3">ผู้ตรวจ</th>
-                  <th class="px-3 md:px-5 py-3 text-center">จัดการ</th>
+                  <th class="px-5 py-4">ID</th>
+                  <th class="px-5 py-4">วันที่และเวลา</th>
+                  <th class="px-5 py-4 text-center">สถานะ</th>
+                  <th class="px-4 py-4 text-center text-slate-500">มาตรวัด</th>
+                  <th class="px-4 py-4 text-center text-slate-500">ซีล</th>
+                  <th class="px-4 py-4 text-center text-slate-500">สายฉีด</th>
+                  <th class="px-4 py-4 text-center text-slate-500">ตัวถัง</th>
+                  <th class="px-5 py-4">ผู้ตรวจ</th>
+                  <th class="px-5 py-4 text-center">จัดการ</th>
                 </tr>
               </thead>
-              <tbody id="reportTableBody" class="divide-y divide-slate-100 text-xs md:text-sm">
-                <tr><td colspan="9" class="py-6 text-center text-slate-400">กำลังโหลดข้อมูล...</td></tr>
+              <tbody id="reportTableBody" class="divide-y divide-slate-100 text-base">
+                <tr><td colspan="9" class="py-10 text-center text-slate-400">กำลังโหลดข้อมูล...</td></tr>
               </tbody>
             </table>
           </div>
         </div>
       </div>
 
-      <!-- ================= ส่วนของ Inspector: สแกน ================= -->
       <div id="tab-inspector-scan" class="hidden">
-        <div class="flex flex-col items-center justify-center pt-2 md:pt-8">
-          <div class="bg-white p-6 md:p-10 rounded-2xl shadow-lg w-full max-w-sm md:max-w-md text-center border border-slate-100">
-            <div class="inline-flex items-center justify-center w-16 h-16 md:w-20 md:h-20 bg-blue-50 text-blue-600 rounded-full mb-4 border-2 border-blue-100">
-              <svg class="w-8 h-8 md:w-10 md:h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+        <div class="flex flex-col items-center justify-center pt-4 md:pt-10">
+          <div class="bg-white p-8 md:p-10 rounded-[2rem] shadow-xl w-full max-w-md text-center border border-slate-100">
+            <div class="inline-flex items-center justify-center w-24 h-24 bg-blue-50 text-blue-600 rounded-full mb-6 border-4 border-blue-100">
+              <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
             </div>
-            <h2 class="text-xl md:text-3xl font-bold text-slate-900 mb-2 md:mb-3">ตรวจเช็คถังดับเพลิง</h2>
-            <p class="text-xs md:text-base text-slate-500 mb-6 leading-relaxed">ใช้กล้องสแกน QR Code หรืออัปโหลดรูป</p>
+            <h2 class="text-3xl font-bold text-slate-900 mb-3">สแกน QR Code</h2>
+            <p class="text-base text-slate-500 mb-8 leading-relaxed">กรุณาหันกล้องไปที่ QR Code<br/>ซึ่งติดอยู่บริเวณตัวถังดับเพลิง</p>
             
-            <button onclick="startCameraScanner()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg transition text-base md:text-xl flex items-center justify-center gap-2 mb-3">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg>
-              เปิดกล้องสแกน
-            </button>
-
-            <div class="relative flex py-2 items-center mb-3">
-              <div class="flex-grow border-t border-gray-200"></div>
-              <span class="flex-shrink-0 mx-4 text-gray-400 text-xs">หรือ</span>
-              <div class="flex-grow border-t border-gray-200"></div>
+            <div id="camera-status" role="status" aria-live="polite" class="camera-status rounded-2xl px-4 py-3 mb-4 text-left text-sm font-bold leading-relaxed">
+              แตะปุ่มเปิดกล้อง แล้วอนุญาตให้ใช้กล้องเมื่อระบบถาม
             </div>
 
-            <label class="bg-slate-800 text-white w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-sm shadow-md cursor-pointer hover:bg-black transition">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-              อัปโหลดรูปภาพ QR
-              <input type="file" accept="image/*" class="hidden" onchange="scanFromFile(event)">
-            </label>
+            <div id="reader-container" class="rounded-2xl overflow-hidden shadow-inner bg-slate-100 mb-5 min-h-[320px] flex items-center justify-center border-2 border-slate-200">
+              <div id="reader" class="border-0 bg-white w-full"></div>
+            </div>
+
+            <div class="grid grid-cols-1 gap-3">
+              <button type="button" id="btnStartCamera" onclick="startCameraScanner()" aria-label="เปิดกล้องเพื่อสแกน QR Code" class="camera-primary-action bg-blue-600 hover:bg-blue-700 text-white w-full py-5 rounded-2xl font-bold text-xl shadow-[0_4px_14px_rgba(37,99,235,0.35)] active:scale-95 transition">
+                เปิดกล้องสแกน QR
+              </button>
+              <button type="button" id="btnStopCamera" onclick="stopScanner()" class="hidden bg-slate-100 hover:bg-slate-200 text-slate-800 w-full py-4 rounded-xl font-bold text-lg transition border border-slate-200">
+                ปิดกล้องชั่วคราว
+              </button>
+              <label class="bg-slate-800 text-white w-full block py-4 rounded-xl font-bold text-lg shadow-lg cursor-pointer hover:bg-black transition border-2 border-slate-900">
+                ถ่ายรูปหรือเลือกรูป QR แทน
+                <input type="file" accept="image/*" class="hidden" onchange="scanFromFile(event)">
+              </label>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- ================= Modal กล้องสแกน (Full Screen) ================= -->
-      <div id="camera-modal" class="hidden fixed inset-0 z-[150] bg-black flex flex-col">
-        <div class="p-4 flex justify-between items-center bg-black/80 text-white backdrop-blur-md absolute top-0 w-full z-10">
-          <h3 class="font-bold text-lg">สแกน QR Code</h3>
-          <button type="button" onclick="stopScanner()" class="bg-gray-800 text-white p-2 rounded-full hover:bg-gray-700">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-          </button>
-        </div>
-        <div class="flex-1 w-full h-full relative flex items-center justify-center overflow-hidden">
-          <div id="reader" class="w-full h-full bg-black"></div>
-        </div>
-        <div id="camera-error" class="hidden absolute bottom-20 w-[90%] left-[5%] bg-rose-600 text-white p-3 rounded-lg text-xs text-center font-bold shadow-lg z-10">
-          ไม่สามารถเปิดกล้องได้ กรุณาอนุญาตสิทธิ์หรือรีเฟรชหน้าเว็บ
-        </div>
-      </div>
-
-      <!-- ================= ส่วนของ Inspector: ฟอร์มหลังสแกน ================= -->
       <div id="tab-inspector-form" class="hidden">
         
-        <!-- ข้อมูลถัง -->
-        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-4 md:p-6 mb-4 shadow-sm">
-          <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-4">
-            <h2 class="text-lg md:text-xl font-bold text-blue-900 flex items-center gap-2">
-              รหัสถัง: <span id="info-id" class="text-rose-600 bg-white px-3 py-1 rounded-lg border border-rose-200 shadow-sm tracking-wide"></span>
-            </h2>
-            <button onclick="startScanView()" class="text-xs font-bold text-slate-700 bg-white px-3 py-2 rounded-lg border shadow-sm hover:bg-slate-50 transition w-full sm:w-auto">
-              ↩️ สแกนถังอื่น
-            </button>
+        <!-- Header Card (ส่วนหัวแบบ Dashboard) -->
+        <div class="bg-white border-l-8 border-blue-600 shadow-sm rounded-3xl p-5 md:p-6 mb-4 flex justify-between items-start">
+          <div>
+            <h2 class="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight" id="info-id-header">-</h2>
+            <p class="text-sm font-medium text-gray-600 mt-1" id="info-loc-header">-</p>
+            <p class="text-sm text-gray-500" id="info-type-header">-</p>
+            <div class="mt-3 flex items-center gap-2">
+              <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              <p class="text-sm font-bold text-blue-700" id="info-last-check">ตรวจล่าสุด : -</p>
+            </div>
           </div>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-4 text-xs md:text-sm text-blue-900 bg-white/80 p-3 md:p-4 rounded-xl border border-blue-100/50">
-            <p><span class="block font-bold mb-0.5 text-blue-700">สถานที่ติดตั้ง:</span> <span id="info-loc" class="font-medium"></span></p>
-            <p><span class="block font-bold mb-0.5 text-blue-700">ประเภทถัง:</span> <span id="info-type" class="font-medium"></span></p>
-            <p><span class="block font-bold mb-0.5 text-blue-700">วันที่รับเข้า:</span> <span id="info-dateEntry" class="font-medium"></span></p>
+          <div id="info-status-badge">
+            <!-- Badge จะถูกสร้างด้วย JS -->
           </div>
         </div>
 
-        <!-- ฟอร์มบันทึกใหม่ -->
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 md:p-8 mb-4 relative overflow-hidden">
-          <div class="absolute top-0 left-0 w-full h-1.5 bg-rose-500"></div>
-          <h3 class="font-bold text-slate-800 text-lg md:text-xl mb-4 md:mb-6">📝 บันทึกการตรวจสอบ 4 จุด</h3>
+        <!-- Middle Section (แบ่ง 2 คอลัมน์) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+          <!-- กล่องข้อมูลถัง -->
+          <div class="bg-slate-50 shadow-sm rounded-3xl p-5 border border-slate-200">
+            <h3 class="font-bold text-slate-800 text-base mb-3 border-b border-slate-200 pb-2 flex items-center gap-2">
+              <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              ข้อมูลถัง
+            </h3>
+            <ul class="space-y-2.5 text-sm text-slate-600">
+              <li class="flex justify-between border-b border-slate-100 pb-1"><span>ประเภท</span> <span class="font-bold text-slate-900" id="info-type-detail">-</span></li>
+              <li class="flex justify-between border-b border-slate-100 pb-1"><span>ตำแหน่ง</span> <span class="font-bold text-slate-900" id="info-loc-detail">-</span></li>
+              <li class="flex justify-between border-b border-slate-100 pb-1"><span>วันที่รับเข้า</span> <span class="font-bold text-slate-900" id="info-dateEntry-detail">-</span></li>
+              <li class="flex justify-between border-b border-slate-100 pb-1"><span>อายุถัง</span> <span class="font-bold text-blue-600" id="info-age">-</span></li>
+              <li class="flex justify-between"><span>จำนวนครั้งที่ตรวจ</span> <span class="font-bold text-blue-600" id="info-check-count">-</span></li>
+            </ul>
+          </div>
+
+          <!-- กล่องประวัติล่าสุด -->
+          <div class="bg-slate-50 shadow-sm rounded-3xl p-5 border border-slate-200">
+            <h3 class="font-bold text-slate-800 text-base mb-3 border-b border-slate-200 pb-2 flex items-center gap-2">
+              <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+              ประวัติการตรวจล่าสุด
+            </h3>
+            <ul class="space-y-2 text-sm" id="info-recent-history">
+              <!-- ประวัติจะถูกใส่ด้วย JS -->
+            </ul>
+          </div>
+        </div>
+
+        <!-- ฟอร์มบันทึกผลรอบใหม่ -->
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 md:p-8 mb-6 relative overflow-hidden">
+          <div class="absolute top-0 left-0 w-full h-1.5 bg-rose-600"></div>
+          
+          <div class="flex justify-between items-center mb-6">
+            <h3 class="font-bold text-slate-900 text-xl flex items-center gap-2">
+              📝 บันทึกผลตรวจรอบใหม่
+            </h3>
+            <button onclick="startScanView()" class="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg hover:bg-slate-200 transition">
+              ✖ ยกเลิก
+            </button>
+          </div>
+
           <form id="inspectionForm" onsubmit="submitInspection(event)">
             <input type="hidden" id="extinguisherId" name="extinguisherId">
             
-            <div class="mb-5 md:mb-8">
-              <label class="block text-sm font-bold text-slate-700 mb-1.5">ชื่อผู้ตรวจสอบ</label>
-              <input type="text" name="inspector" required placeholder="นายสมชาย..." class="w-full px-3 md:px-5 py-2.5 md:py-3 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-rose-500 text-sm md:text-base transition">
+            <div class="mb-6">
+              <label class="block text-sm font-bold text-slate-700 mb-2">ชื่อผู้ตรวจ</label>
+              <input type="text" name="inspector" required placeholder="ระบุชื่อผู้ตรวจสอบ..." class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-rose-500 text-base transition">
             </div>
 
-            <div class="border-t border-slate-100 pt-4 md:pt-6 mb-5">
-              <!-- 4 หัวข้อแบบ Grid สำหรับจอใหญ่ -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                
-                <!-- ข้อ 1 -->
-                <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                  <label class="block text-sm font-bold text-slate-800 mb-2">1. มาตรวัดแรงดัน <span class="text-emerald-600 font-medium text-xs">(สีเขียว)</span></label>
-                  <div class="flex gap-2">
-                    <label class="flex-1 cursor-pointer">
-                      <input type="radio" name="gauge" value="ผ่าน" class="peer sr-only" required>
-                      <div class="text-center py-2.5 border rounded-lg bg-white peer-checked:bg-emerald-50 peer-checked:border-emerald-500 peer-checked:text-emerald-700 font-bold text-sm shadow-sm transition">✓ ผ่าน</div>
-                    </label>
-                    <label class="flex-1 cursor-pointer">
-                      <input type="radio" name="gauge" value="ไม่ผ่าน" class="peer sr-only">
-                      <div class="text-center py-2.5 border rounded-lg bg-white peer-checked:bg-rose-50 peer-checked:border-rose-500 peer-checked:text-rose-700 font-bold text-sm shadow-sm transition">✗ ไม่ผ่าน</div>
-                    </label>
-                  </div>
+            <!-- รายการตรวจเช็ค (UI แบบแนวนอน) -->
+            <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 mb-6">
+              <div class="flex items-center justify-between py-3 border-b border-slate-200 last:border-0">
+                <label class="text-sm font-bold text-slate-800">1. มาตรวัดแรงดัน <span class="hidden sm:inline text-xs font-normal text-emerald-600">(สีเขียว)</span></label>
+                <div class="flex gap-4">
+                  <label class="flex items-center gap-1.5 cursor-pointer group">
+                    <input type="radio" name="gauge" value="ผ่าน" required class="w-5 h-5 accent-emerald-600">
+                    <span class="text-sm font-bold text-slate-600 group-hover:text-emerald-700">ผ่าน</span>
+                  </label>
+                  <label class="flex items-center gap-1.5 cursor-pointer group">
+                    <input type="radio" name="gauge" value="ไม่ผ่าน" class="w-5 h-5 accent-rose-600">
+                    <span class="text-sm font-bold text-slate-600 group-hover:text-rose-700">ไม่ผ่าน</span>
+                  </label>
                 </div>
-
-                <!-- ข้อ 2 -->
-                <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                  <label class="block text-sm font-bold text-slate-800 mb-2">2. ซีลและสลัก <span class="text-blue-600 font-medium text-xs">(สมบูรณ์)</span></label>
-                  <div class="flex gap-2">
-                    <label class="flex-1 cursor-pointer">
-                      <input type="radio" name="sealPin" value="ผ่าน" class="peer sr-only" required>
-                      <div class="text-center py-2.5 border rounded-lg bg-white peer-checked:bg-emerald-50 peer-checked:border-emerald-500 peer-checked:text-emerald-700 font-bold text-sm shadow-sm transition">✓ ผ่าน</div>
-                    </label>
-                    <label class="flex-1 cursor-pointer">
-                      <input type="radio" name="sealPin" value="ไม่ผ่าน" class="peer sr-only">
-                      <div class="text-center py-2.5 border rounded-lg bg-white peer-checked:bg-rose-50 peer-checked:border-rose-500 peer-checked:text-rose-700 font-bold text-sm shadow-sm transition">✗ ไม่ผ่าน</div>
-                    </label>
-                  </div>
+              </div>
+              
+              <div class="flex items-center justify-between py-3 border-b border-slate-200 last:border-0">
+                <label class="text-sm font-bold text-slate-800">2. ซีลและสลัก <span class="hidden sm:inline text-xs font-normal text-slate-500">(สมบูรณ์)</span></label>
+                <div class="flex gap-4">
+                  <label class="flex items-center gap-1.5 cursor-pointer group">
+                    <input type="radio" name="sealPin" value="ผ่าน" required class="w-5 h-5 accent-emerald-600">
+                    <span class="text-sm font-bold text-slate-600 group-hover:text-emerald-700">ผ่าน</span>
+                  </label>
+                  <label class="flex items-center gap-1.5 cursor-pointer group">
+                    <input type="radio" name="sealPin" value="ไม่ผ่าน" class="w-5 h-5 accent-rose-600">
+                    <span class="text-sm font-bold text-slate-600 group-hover:text-rose-700">ไม่ผ่าน</span>
+                  </label>
                 </div>
+              </div>
 
-                <!-- ข้อ 3 -->
-                <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                  <label class="block text-sm font-bold text-slate-800 mb-2">3. สายฉีด <span class="text-blue-600 font-medium text-xs">(ไม่แตก/ไม่มีรัง)</span></label>
-                  <div class="flex gap-2">
-                    <label class="flex-1 cursor-pointer">
-                      <input type="radio" name="hose" value="ผ่าน" class="peer sr-only" required>
-                      <div class="text-center py-2.5 border rounded-lg bg-white peer-checked:bg-emerald-50 peer-checked:border-emerald-500 peer-checked:text-emerald-700 font-bold text-sm shadow-sm transition">✓ ผ่าน</div>
-                    </label>
-                    <label class="flex-1 cursor-pointer">
-                      <input type="radio" name="hose" value="ไม่ผ่าน" class="peer sr-only">
-                      <div class="text-center py-2.5 border rounded-lg bg-white peer-checked:bg-rose-50 peer-checked:border-rose-500 peer-checked:text-rose-700 font-bold text-sm shadow-sm transition">✗ ไม่ผ่าน</div>
-                    </label>
-                  </div>
+              <div class="flex items-center justify-between py-3 border-b border-slate-200 last:border-0">
+                <label class="text-sm font-bold text-slate-800">3. สายฉีด <span class="hidden sm:inline text-xs font-normal text-slate-500">(ไม่ปริแตก)</span></label>
+                <div class="flex gap-4">
+                  <label class="flex items-center gap-1.5 cursor-pointer group">
+                    <input type="radio" name="hose" value="ผ่าน" required class="w-5 h-5 accent-emerald-600">
+                    <span class="text-sm font-bold text-slate-600 group-hover:text-emerald-700">ผ่าน</span>
+                  </label>
+                  <label class="flex items-center gap-1.5 cursor-pointer group">
+                    <input type="radio" name="hose" value="ไม่ผ่าน" class="w-5 h-5 accent-rose-600">
+                    <span class="text-sm font-bold text-slate-600 group-hover:text-rose-700">ไม่ผ่าน</span>
+                  </label>
                 </div>
+              </div>
 
-                <!-- ข้อ 4 -->
-                <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                  <label class="block text-sm font-bold text-slate-800 mb-2">4. สภาพตัวถัง <span class="text-blue-600 font-medium text-xs">(ไม่บุบ/สนิม)</span></label>
-                  <div class="flex gap-2">
-                    <label class="flex-1 cursor-pointer">
-                      <input type="radio" name="cylinder" value="ผ่าน" class="peer sr-only" required>
-                      <div class="text-center py-2.5 border rounded-lg bg-white peer-checked:bg-emerald-50 peer-checked:border-emerald-500 peer-checked:text-emerald-700 font-bold text-sm shadow-sm transition">✓ ผ่าน</div>
-                    </label>
-                    <label class="flex-1 cursor-pointer">
-                      <input type="radio" name="cylinder" value="ไม่ผ่าน" class="peer sr-only">
-                      <div class="text-center py-2.5 border rounded-lg bg-white peer-checked:bg-rose-50 peer-checked:border-rose-500 peer-checked:text-rose-700 font-bold text-sm shadow-sm transition">✗ ไม่ผ่าน</div>
-                    </label>
-                  </div>
+              <div class="flex items-center justify-between py-3 border-b border-slate-200 last:border-0">
+                <label class="text-sm font-bold text-slate-800">4. สภาพตัวถัง <span class="hidden sm:inline text-xs font-normal text-slate-500">(ไม่บุบ/สนิม)</span></label>
+                <div class="flex gap-4">
+                  <label class="flex items-center gap-1.5 cursor-pointer group">
+                    <input type="radio" name="cylinder" value="ผ่าน" required class="w-5 h-5 accent-emerald-600">
+                    <span class="text-sm font-bold text-slate-600 group-hover:text-emerald-700">ผ่าน</span>
+                  </label>
+                  <label class="flex items-center gap-1.5 cursor-pointer group">
+                    <input type="radio" name="cylinder" value="ไม่ผ่าน" class="w-5 h-5 accent-rose-600">
+                    <span class="text-sm font-bold text-slate-600 group-hover:text-rose-700">ไม่ผ่าน</span>
+                  </label>
                 </div>
-
               </div>
             </div>
 
             <div class="mb-6">
-              <label class="block text-sm font-bold text-slate-700 mb-1.5">หมายเหตุเพิ่มเติม (ถ้ามี)</label>
-              <input type="text" name="notes" placeholder="ระบุสาเหตุหากมีข้อที่ไม่ผ่าน..." class="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-rose-500 transition">
+              <label class="block text-sm font-bold text-slate-700 mb-2">หมายเหตุ</label>
+              <input type="text" name="notes" placeholder="ระบุสาเหตุหากมีข้อที่ไม่ผ่าน..." class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-base focus:ring-2 focus:ring-rose-500 transition">
             </div>
 
-            <button type="submit" id="btnSubmitInspection" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold py-3.5 rounded-xl shadow-lg text-base md:text-lg active:scale-95 transition">
-              💾 บันทึกผล
+            <button type="submit" id="btnSubmitInspection" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold py-4 rounded-xl shadow-[0_4px_15px_rgba(225,29,72,0.4)] text-lg active:scale-95 transition">
+              💾 บันทึกผลตรวจ
             </button>
           </form>
         </div>
 
         <!-- หน้าจอสำเร็จ -->
-        <div id="successMessage" class="hidden text-center py-10 bg-white rounded-2xl shadow-md border border-slate-100 mb-4">
-          <div class="inline-flex items-center justify-center w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full mb-4 shadow-inner">
-            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+        <div id="successMessage" class="hidden text-center py-10 bg-white rounded-3xl shadow-sm border border-slate-100 mb-6">
+          <div class="inline-flex items-center justify-center w-24 h-24 bg-emerald-100 text-emerald-600 rounded-full mb-6 shadow-inner">
+            <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
           </div>
-          <h3 class="text-2xl font-bold text-slate-900 mb-2">บันทึกสำเร็จ!</h3>
-          <p id="resultFeedback" class="text-sm md:text-base mb-8"></p>
-          <button onclick="startScanView()" class="text-white bg-blue-600 hover:bg-blue-700 font-bold px-8 py-3.5 rounded-xl shadow-md active:scale-95 transition text-base w-full max-w-xs mx-auto flex items-center justify-center gap-2">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg>
+          <h3 class="text-3xl font-bold text-slate-900 mb-3">บันทึกข้อมูลเรียบร้อย!</h3>
+          <p id="resultFeedback" class="text-lg mb-10"></p>
+          <button onclick="startScanView()" class="text-white bg-blue-600 hover:bg-blue-700 font-bold px-10 py-5 rounded-2xl shadow-[0_4px_14px_rgba(37,99,235,0.4)] active:scale-95 transition text-xl w-full max-w-sm mx-auto flex items-center justify-center gap-2">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg>
             สแกนเครื่องถัดไป
           </button>
-        </div>
-
-        <!-- ประวัติย้อนหลังของถังนี้ -->
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 md:p-6 mb-4">
-          <h3 class="font-bold text-slate-800 text-base mb-4 border-l-4 border-slate-400 pl-2">
-            ประวัติการตรวจเช็คย้อนหลัง
-          </h3>
-          
-          <div class="flex gap-2 mb-4 bg-slate-50 p-2 md:p-3 rounded-lg border border-slate-200">
-            <label class="text-xs font-bold text-slate-700 flex items-center">กรองเดือน/ปี:</label>
-            <input type="month" id="historyFilterMonth" onchange="filterLocalHistory()" class="flex-1 px-2 py-1.5 border border-slate-300 rounded bg-white text-xs max-w-[150px]">
-          </div>
-
-          <div class="table-container overflow-x-auto rounded-lg border border-slate-200 shadow-sm">
-            <table class="w-full text-left whitespace-nowrap">
-              <thead class="text-xs text-slate-600 bg-slate-100 uppercase font-bold border-b border-slate-300">
-                <tr>
-                  <th class="px-3 py-2">วันที่และเวลา</th>
-                  <th class="px-2 py-2 text-center">สถานะ</th>
-                  <th class="px-2 py-2 text-center font-normal text-[10px]">มาตรวัด</th>
-                  <th class="px-2 py-2 text-center font-normal text-[10px]">ซีล</th>
-                  <th class="px-2 py-2 text-center font-normal text-[10px]">สาย</th>
-                  <th class="px-2 py-2 text-center font-normal text-[10px]">ถัง</th>
-                  <th class="px-3 py-2">ผู้ตรวจ</th>
-                </tr>
-              </thead>
-              <tbody id="historyTableBody" class="divide-y divide-slate-100 text-xs">
-                <!-- เติมข้อมูลผ่าน JS -->
-              </tbody>
-            </table>
-          </div>
         </div>
 
       </div>
     </main>
 
     <!-- แถบเมนูด้านล่างสำหรับ Admin (เฉพาะมือถือ) -->
-    <nav id="nav-admin" class="hidden fixed bottom-0 w-full bg-white/95 backdrop-blur-md border-t border-slate-200 flex justify-around z-30 pb-safe pt-1.5 shadow-[0_-10px_20px_rgba(0,0,0,0.05)]">
-      <button onclick="switchAdminTab('inventory')" id="btn-tab-inventory" class="nav-btn flex-1 text-center transition font-bold text-[11px]">
-        <div class="icon-bg flex justify-center items-center w-12 h-7 mx-auto mb-0.5 transition-colors">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+    <nav id="nav-admin" class="hidden fixed bottom-0 w-full bg-white/95 backdrop-blur-md border-t border-slate-200 flex justify-around z-30 pb-safe pt-2 shadow-[0_-10px_20px_rgba(0,0,0,0.05)]">
+      <button onclick="switchAdminTab('inventory')" id="btn-tab-inventory" class="nav-btn flex-1 py-2 text-center transition font-bold text-sm">
+        <div class="icon-bg flex justify-center items-center w-14 h-9 mx-auto mb-1.5 transition-colors">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
         </div>
         ทะเบียนถัง
       </button>
-      <button onclick="switchAdminTab('report')" id="btn-tab-report" class="nav-btn flex-1 text-center transition font-bold text-[11px]">
-        <div class="icon-bg flex justify-center items-center w-12 h-7 mx-auto mb-0.5 transition-colors">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+      <button onclick="switchAdminTab('report')" id="btn-tab-report" class="nav-btn flex-1 py-2 text-center transition font-bold text-sm">
+        <div class="icon-bg flex justify-center items-center w-14 h-9 mx-auto mb-1.5 transition-colors">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
         </div>
-        ประวัติ
+        ประวัติการตรวจ
       </button>
     </nav>
   </div>
@@ -500,116 +499,116 @@
     <div class="text-center mb-6 border-b-2 border-gray-800 pb-4">
       <h2 class="text-3xl font-bold">รายงานทะเบียนถังดับเพลิง</h2>
     </div>
-    <table class="w-full border-collapse border border-gray-400 text-sm">
+    <table class="w-full border-collapse border border-gray-400 text-base">
       <thead>
         <tr class="bg-gray-100">
-          <th class="border border-gray-400 p-2 text-left">ID</th>
-          <th class="border border-gray-400 p-2 text-left">ประเภท</th>
-          <th class="border border-gray-400 p-2 text-left">ตำแหน่ง</th>
-          <th class="border border-gray-400 p-2 text-left">รับเข้า</th>
-          <th class="border border-gray-400 p-2 text-left">จำหน่าย</th>
+          <th class="border border-gray-400 p-3 text-left">ID</th>
+          <th class="border border-gray-400 p-3 text-left">ประเภท</th>
+          <th class="border border-gray-400 p-3 text-left">ตำแหน่ง</th>
+          <th class="border border-gray-400 p-3 text-left">รับเข้า</th>
+          <th class="border border-gray-400 p-3 text-left">จำหน่าย</th>
         </tr>
       </thead>
       <tbody id="print-inventory-body"></tbody>
     </table>
   </div>
 
-  <div id="print-section" class="hidden bg-white text-black max-w-xl mx-auto text-sm">
-    <div class="text-center mb-6 border-b-2 border-gray-800 pb-3">
-      <h2 class="text-2xl font-bold mb-1">ใบตรวจเช็คเครื่องดับเพลิง</h2>
-      <p class="text-base text-gray-600">เอกสารบันทึกการตรวจสอบ</p>
+  <div id="print-section" class="hidden bg-white text-black max-w-xl mx-auto text-base">
+    <div class="text-center mb-8 border-b-2 border-gray-800 pb-4">
+      <h2 class="text-3xl font-bold mb-2">ใบตรวจเช็คเครื่องดับเพลิง</h2>
+      <p class="text-lg text-gray-600">เอกสารบันทึกการตรวจสอบ</p>
     </div>
-    <div class="grid grid-cols-2 gap-4 text-base mb-6">
+    <div class="grid grid-cols-2 gap-6 text-lg mb-8 bg-gray-50 p-4 rounded-xl border border-gray-200">
       <p><strong>รหัสถัง (ID):</strong> <span id="print-id"></span></p>
       <p><strong>วันที่/เวลา:</strong> <span id="print-date"></span></p>
       <p><strong>ผู้ตรวจสอบ:</strong> <span id="print-inspector"></span></p>
-      <p><strong>สรุปผล:</strong> <span id="print-status" class="font-bold"></span></p>
+      <p><strong>สรุปผล:</strong> <span id="print-status" class="font-bold text-xl"></span></p>
     </div>
-    <table class="w-full border-collapse border border-gray-400 mb-8 text-base">
+    <table class="w-full border-collapse border border-gray-400 mb-10 text-lg">
       <thead>
         <tr class="bg-gray-100">
-          <th class="border border-gray-400 p-2 text-left w-2/3">รายการตรวจสอบ</th>
-          <th class="border border-gray-400 p-2 text-center w-1/3">ผลการประเมิน</th>
+          <th class="border border-gray-400 p-3 text-left w-2/3">รายการตรวจสอบ</th>
+          <th class="border border-gray-400 p-3 text-center w-1/3">ผลการประเมิน</th>
         </tr>
       </thead>
       <tbody>
-        <tr><td class="border border-gray-400 p-2">1. มาตรวัดแรงดัน</td><td class="border border-gray-400 p-2 text-center" id="print-gauge"></td></tr>
-        <tr><td class="border border-gray-400 p-2">2. ซีลและสลัก</td><td class="border border-gray-400 p-2 text-center" id="print-seal"></td></tr>
-        <tr><td class="border border-gray-400 p-2">3. สายฉีด</td><td class="border border-gray-400 p-2 text-center" id="print-hose"></td></tr>
-        <tr><td class="border border-gray-400 p-2">4. สภาพตัวถัง</td><td class="border border-gray-400 p-2 text-center" id="print-cylinder"></td></tr>
+        <tr><td class="border border-gray-400 p-3">1. มาตรวัดแรงดัน</td><td class="border border-gray-400 p-3 text-center" id="print-gauge"></td></tr>
+        <tr><td class="border border-gray-400 p-3">2. ซีลและสลัก</td><td class="border border-gray-400 p-3 text-center" id="print-seal"></td></tr>
+        <tr><td class="border border-gray-400 p-3">3. สายฉีด</td><td class="border border-gray-400 p-3 text-center" id="print-hose"></td></tr>
+        <tr><td class="border border-gray-400 p-3">4. สภาพตัวถัง</td><td class="border border-gray-400 p-3 text-center" id="print-cylinder"></td></tr>
       </tbody>
     </table>
-    <div class="mt-16 text-center text-base">
+    <div class="mt-20 text-center text-lg">
       <p>ลงชื่อ.......................................................</p>
-      <p class="mt-3">( <span id="print-sign-name" class="font-bold px-4"></span> )</p>
-      <p class="mt-1 text-gray-500">ผู้ตรวจสอบ</p>
+      <p class="mt-4">( <span id="print-sign-name" class="font-bold px-6"></span> )</p>
+      <p class="mt-2 text-gray-500">ผู้ตรวจสอบ</p>
     </div>
   </div>
 
   <!-- ================= Modals สำหรับแก้ไข ================= -->
   <!-- Modal ทะเบียน -->
   <div id="editInvModal" class="hidden fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 backdrop-blur-sm">
-    <div class="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl">
-      <div class="flex justify-between items-center mb-5 border-b pb-3">
-        <h3 class="text-xl font-bold text-gray-900 border-l-4 border-indigo-500 pl-3">แก้ไขทะเบียน</h3>
-        <button onclick="document.getElementById('editInvModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-700 bg-gray-100 rounded-full p-1.5 transition">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+    <div class="bg-white rounded-[2rem] p-8 w-full max-w-md shadow-2xl">
+      <div class="flex justify-between items-center mb-6 border-b pb-4">
+        <h3 class="text-2xl font-bold text-gray-900 border-l-4 border-indigo-500 pl-3">แก้ไขทะเบียน</h3>
+        <button onclick="document.getElementById('editInvModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-700 bg-gray-100 rounded-full p-2 transition">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
         </button>
       </div>
-      <form id="editInvForm" onsubmit="saveInvEdit(event)" class="space-y-4 text-sm">
+      <form id="editInvForm" onsubmit="saveInvEdit(event)" class="space-y-5 text-base">
         <div>
-          <label class="block font-bold text-gray-700 mb-1">รหัสถัง (ID)</label>
-          <input type="text" id="edit-inv-id" readonly class="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg font-bold text-gray-600 cursor-not-allowed">
+          <label class="block font-bold text-gray-700 mb-2">รหัสถัง (ID)</label>
+          <input type="text" id="edit-inv-id" readonly class="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-xl font-bold text-gray-600 cursor-not-allowed">
         </div>
         <div>
-          <label class="block font-bold text-gray-700 mb-1">ประเภท</label>
-          <select id="edit-inv-type" required class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500 outline-none">
+          <label class="block font-bold text-gray-700 mb-2">ประเภท</label>
+          <select id="edit-inv-type" required class="w-full px-4 py-3 border border-gray-300 rounded-xl bg-white focus:ring-2 focus:ring-indigo-500 outline-none">
             <option value="ผงเคมีแห้ง (Dry Chemical)">ผงเคมีแห้ง (Dry Chemical)</option>
             <option value="คาร์บอนไดออกไซด์ (CO2)">คาร์บอนไดออกไซด์ (CO2)</option>
             <option value="โฟม (Foam)">โฟม (Foam)</option>
           </select>
         </div>
         <div>
-          <label class="block font-bold text-gray-700 mb-1">ตำแหน่งที่ติดตั้ง</label>
-          <input type="text" id="edit-inv-loc" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+          <label class="block font-bold text-gray-700 mb-2">ตำแหน่งที่ติดตั้ง</label>
+          <input type="text" id="edit-inv-loc" required class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none">
         </div>
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="block font-bold text-gray-700 mb-1">วันที่รับเข้า</label>
-            <input type="date" id="edit-inv-entry" required class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+            <label class="block font-bold text-gray-700 mb-2">วันที่รับเข้า</label>
+            <input type="date" id="edit-inv-entry" required class="w-full px-4 py-3 border border-gray-300 rounded-xl">
           </div>
           <div>
-            <label class="block font-bold text-gray-700 mb-1">วันที่จำหน่าย</label>
-            <input type="date" id="edit-inv-dispose" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+            <label class="block font-bold text-gray-700 mb-2">วันที่จำหน่าย</label>
+            <input type="date" id="edit-inv-dispose" class="w-full px-4 py-3 border border-gray-300 rounded-xl">
           </div>
         </div>
-        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-md mt-5 transition text-base">บันทึกข้อมูล</button>
+        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl shadow-md mt-6 transition text-lg">บันทึกข้อมูล</button>
       </form>
     </div>
   </div>
 
   <!-- Modal ประวัติเช็ค -->
   <div id="editReportModal" class="hidden fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 backdrop-blur-sm">
-    <div class="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl">
-      <div class="flex justify-between items-center mb-5 border-b pb-3">
-        <h3 class="text-xl font-bold text-gray-900 border-l-4 border-rose-500 pl-3">แก้ไขสถานะการตรวจ</h3>
-        <button onclick="document.getElementById('editReportModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-700 bg-gray-100 rounded-full p-1.5 transition">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+    <div class="bg-white rounded-[2rem] p-8 w-full max-w-md shadow-2xl">
+      <div class="flex justify-between items-center mb-6 border-b pb-4">
+        <h3 class="text-2xl font-bold text-gray-900 border-l-4 border-rose-500 pl-3">แก้ไขสถานะการตรวจ</h3>
+        <button onclick="document.getElementById('editReportModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-700 bg-gray-100 rounded-full p-2 transition">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
         </button>
       </div>
-      <form id="editReportForm" onsubmit="saveReportEdit(event)" class="space-y-4 text-sm">
+      <form id="editReportForm" onsubmit="saveReportEdit(event)" class="space-y-5 text-base">
         <div>
-          <label class="block font-bold text-gray-700 mb-1">รหัสถัง (ID)</label>
-          <input type="text" id="edit-report-id" readonly class="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg font-bold text-gray-600 cursor-not-allowed">
+          <label class="block font-bold text-gray-700 mb-2">รหัสถัง (ID)</label>
+          <input type="text" id="edit-report-id" readonly class="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-xl font-bold text-gray-600 cursor-not-allowed">
         </div>
         <div>
-          <label class="block font-bold text-gray-700 mb-1">ปรับปรุงสถานะใหม่</label>
-          <select id="edit-report-status" required class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+          <label class="block font-bold text-gray-700 mb-2">ปรับปรุงสถานะใหม่</label>
+          <select id="edit-report-status" required class="w-full px-4 py-3 border border-gray-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 outline-none">
             <option value="ปกติ">🟢 ปกติ (พร้อมใช้งาน)</option>
             <option value="ชำรุด">🔴 ชำรุด (ส่งซ่อม/แก้ไข)</option>
           </select>
         </div>
-        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-md mt-5 transition text-base">บันทึกข้อมูล</button>
+        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-md mt-6 transition text-lg">บันทึกข้อมูล</button>
       </form>
     </div>
   </div>
@@ -621,29 +620,36 @@
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz87jP3uPB1vEUCjZG5vhsJ5wA19AbZ8cfofFqDLXednFO6P20eHEIQYlXsuS3A2YUSJA/exec"; 
     
     let currentRole = null; 
-    let currentExtinguisherHistory = []; 
     let html5QrcodeScanner = null;
+    let isScannerRunning = false;
     let allInventory = []; 
     let allReports = []; 
 
     // ================== ส่วนของ API & Loading ==================
     async function fetchAPI(action, data = null) {
-      if (APPS_SCRIPT_URL === "https://script.google.com/u/0/home/projects/1o-aQ6E_SO2TTnKkxVeTHKdXxteIdXyPkXovyxyyVIPyTZhf3zvAGkQzB/edit" || !APPS_SCRIPT_URL) {
-        throw new Error("ระบบยังไม่พร้อม: กรุณาใส่ URL ของ Web App (deploy link) ในโค้ด index.html");
+      if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes("YOUR_WEB_APP_URL_HERE")) {
+        throw new Error("ระบบยังไม่พร้อม: กรุณาใส่ URL ของ Web App ในโค้ด index.html");
       }
+      
       showLoading(true, "กำลังประมวลผล...");
       try {
         let url, options;
         if (data) {
           url = APPS_SCRIPT_URL;
-          options = { method: 'POST', body: JSON.stringify({ action: action, data: data }), headers: { 'Content-Type': 'text/plain;charset=utf-8' } };
+          options = {
+            method: 'POST',
+            body: JSON.stringify({ action: action, data: data }),
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' } 
+          };
         } else {
           url = APPS_SCRIPT_URL + "?action=" + action;
           options = { method: 'GET' };
         }
+        
         const response = await fetch(url, options);
         const result = await response.json();
         if (!result.success) throw new Error(result.message);
+        
         showLoading(false);
         return result;
       } catch (error) {
@@ -670,6 +676,7 @@
       e.preventDefault();
       const user = document.getElementById('login-user').value;
       const pass = document.getElementById('login-pass').value;
+      
       if(user === 'admin' && pass === '1234') {
         currentRole = 'admin';
         document.getElementById('header-title').innerText = "ผู้ดูแลระบบ (Admin)";
@@ -682,7 +689,7 @@
     function handleLogout() {
       if(confirm('ออกจากระบบ?')) {
         currentRole = null;
-        stopScanner();
+        stopScanner(false);
         document.getElementById('main-app').classList.add('hidden');
         document.getElementById('login-screen').classList.remove('hidden');
         document.getElementById('loginForm').reset();
@@ -697,6 +704,7 @@
       const desktopNav = document.getElementById('desktop-nav-admin');
       const mobileNav = document.getElementById('nav-admin');
 
+      // ซ่อนทุกแท็บก่อน
       document.getElementById('tab-admin-inventory').classList.add('hidden');
       document.getElementById('tab-admin-report').classList.add('hidden');
       document.getElementById('tab-inspector-scan').classList.add('hidden');
@@ -709,7 +717,7 @@
       } else if (currentRole === 'inspector') {
         desktopNav.className = "hidden";
         mobileNav.className = "hidden";
-        document.getElementById('tab-inspector-scan').classList.remove('hidden');
+        startScanView();
       }
     }
 
@@ -717,6 +725,7 @@
     function switchAdminTab(tabName) {
       document.getElementById('tab-admin-inventory').classList.add('hidden');
       document.getElementById('tab-admin-report').classList.add('hidden');
+      
       document.getElementById('btn-tab-inventory').classList.remove('active');
       document.getElementById('btn-tab-report').classList.remove('active');
       document.getElementById('btn-desktop-tab-inventory').classList.remove('active');
@@ -736,6 +745,7 @@
       window.scrollTo(0,0);
     }
 
+    // ================== ฟังก์ชัน Download CSV ==================
     function downloadCSV(csvContent, filename) {
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement("a");
@@ -776,33 +786,35 @@
         const res = await fetchAPI('getInventory');
         allInventory = res.data;
         if(!allInventory || allInventory.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-slate-500">ไม่มีข้อมูลในระบบ</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="6" class="text-center py-10 text-slate-500 text-lg">ไม่มีข้อมูลในระบบ</td></tr>';
           return;
         }
         let html = '';
         allInventory.forEach(row => {
           html += `<tr class="bg-white hover:bg-slate-50 border-b border-slate-100 transition">
-            <td class="px-3 md:px-5 py-3 font-bold text-slate-800">${row.id}</td>
-            <td class="px-3 md:px-5 py-3 text-slate-600">${row.type}</td>
-            <td class="px-3 md:px-5 py-3 text-slate-600">${row.loc}</td>
-            <td class="px-3 md:px-5 py-3 text-slate-600">${row.dateEntry || '-'}</td>
-            <td class="px-3 md:px-5 py-3 text-slate-600">${row.dateDispose || '-'}</td>
-            <td class="px-3 md:px-5 py-3 text-center flex justify-center space-x-2">
-              <button onclick="openEditInvModal('${row.id}', '${row.type}', '${row.loc}', '${row.dateEntry}', '${row.dateDispose}')" class="text-blue-600 bg-blue-50 hover:bg-blue-100 p-2 rounded-lg font-bold transition">✏️<span class="hidden sm:inline"> แก้ไข</span></button>
-              <button onclick="printQR('${row.id}')" class="text-indigo-600 bg-indigo-50 hover:bg-indigo-100 p-2 rounded-lg font-bold transition">🖨️<span class="hidden sm:inline"> QR</span></button>
+            <td class="px-5 py-4 font-bold text-slate-800 text-lg">${row.id}</td>
+            <td class="px-5 py-4 text-slate-600">${row.type}</td>
+            <td class="px-5 py-4 text-slate-600">${row.loc}</td>
+            <td class="px-5 py-4 text-slate-600">${row.dateEntry || '-'}</td>
+            <td class="px-5 py-4 text-slate-600">${row.dateDispose || '-'}</td>
+            <td class="px-5 py-4 text-center flex justify-center space-x-3">
+              <button onclick="openEditInvModal('${row.id}', '${row.type}', '${row.loc}', '${row.dateEntry}', '${row.dateDispose}')" class="text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-2 rounded-xl font-bold transition">✏️ แก้ไข</button>
+              <button onclick="printQR('${row.id}')" class="text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-3 py-2 rounded-xl font-bold transition">🖨️ QR</button>
             </td>
           </tr>`;
         });
         tbody.innerHTML = html;
       } catch (err) {
-        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-red-500">${err.message}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-10 text-red-500 text-lg">${err.message}</td></tr>`;
       }
     }
 
     function exportInventoryExcel() {
       if (allInventory.length === 0) { alert("ไม่มีข้อมูล"); return; }
       let csv = "\uFEFFรหัสถัง,ประเภท,ตำแหน่งที่ติดตั้ง,วันที่รับเข้า,วันที่จำหน่าย\n";
-      allInventory.forEach(r => { csv += `"${r.id}","${r.type}","${r.loc}","${r.dateEntry || '-'}","${r.dateDispose || '-'}"\n`; });
+      allInventory.forEach(r => {
+        csv += `"${r.id}","${r.type}","${r.loc}","${r.dateEntry || '-'}","${r.dateDispose || '-'}"\n`;
+      });
       downloadCSV(csv, "ทะเบียนถังดับเพลิง.csv");
     }
 
@@ -811,19 +823,24 @@
       let html = '';
       allInventory.forEach(r => {
         html += `<tr>
-          <td class="border border-gray-400 p-2">${r.id}</td>
-          <td class="border border-gray-400 p-2">${r.type}</td>
-          <td class="border border-gray-400 p-2">${r.loc}</td>
-          <td class="border border-gray-400 p-2">${r.dateEntry || '-'}</td>
-          <td class="border border-gray-400 p-2">${r.dateDispose || '-'}</td>
+          <td class="border border-gray-400 p-3">${r.id}</td>
+          <td class="border border-gray-400 p-3">${r.type}</td>
+          <td class="border border-gray-400 p-3">${r.loc}</td>
+          <td class="border border-gray-400 p-3">${r.dateEntry || '-'}</td>
+          <td class="border border-gray-400 p-3">${r.dateDispose || '-'}</td>
         </tr>`;
       });
       document.getElementById('print-inventory-body').innerHTML = html;
+      
       document.getElementById('print-inventory-section').classList.remove('hidden');
       document.querySelectorAll('style, nav, main, header, #loading-overlay').forEach(el => {
          if(el.tagName !== 'STYLE') el.classList.add('print:hidden');
       });
-      setTimeout(() => { window.print(); document.getElementById('print-inventory-section').classList.add('hidden'); }, 500);
+
+      setTimeout(() => { 
+        window.print(); 
+        document.getElementById('print-inventory-section').classList.add('hidden');
+      }, 500);
     }
 
     function openEditInvModal(id, type, loc, dEntry, dDisp) {
@@ -835,8 +852,20 @@
         }
       }
       document.getElementById('edit-inv-loc').value = loc;
-      document.getElementById('edit-inv-entry').value = dEntry !== '-' ? dEntry : '';
-      document.getElementById('edit-inv-dispose').value = dDisp !== '-' ? dDisp : '';
+      
+      // Formatting Date for HTML Date input (YYYY-MM-DD)
+      const formatDateForInput = (dStr) => {
+        if(!dStr || dStr === '-') return '';
+        // If it's DD/MM/YYYY
+        if(dStr.includes('/')) {
+            const parts = dStr.split(' ')[0].split('/');
+            if(parts.length === 3) return `20${parts[2].slice(-2)}-${parts[1]}-${parts[0]}`;
+        }
+        return dStr;
+      };
+
+      document.getElementById('edit-inv-entry').value = formatDateForInput(dEntry);
+      document.getElementById('edit-inv-dispose').value = formatDateForInput(dDisp);
       document.getElementById('editInvModal').classList.remove('hidden');
     }
 
@@ -849,6 +878,7 @@
         dateEntry: document.getElementById('edit-inv-entry').value,
         dateDispose: document.getElementById('edit-inv-dispose').value
       };
+      
       const btn = event.target.querySelector('button[type="submit"]');
       btn.innerText = "กำลังบันทึก..."; btn.disabled = true;
 
@@ -864,11 +894,14 @@
     function printQR(id) {
       const baseUrl = window.location.href.split('?')[0]; 
       const appUrl = baseUrl + "?id=" + encodeURIComponent(id);
+      
       const tempCanvas = document.createElement('canvas');
       new QRious({ element: tempCanvas, value: appUrl, size: 400, level: 'H' });
+
       const canvas = document.getElementById('qrCanvasPrint');
       const ctx = canvas.getContext('2d');
       canvas.width = 400; canvas.height = 460; 
+      
       ctx.fillStyle = "#ffffff";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(tempCanvas, 0, 0);
@@ -881,6 +914,7 @@
       document.querySelectorAll('style, nav, main, header, #loading-overlay').forEach(el => {
          if(el.tagName !== 'STYLE') el.classList.add('print:hidden');
       });
+
       setTimeout(() => { window.print(); }, 500);
     }
 
@@ -892,7 +926,7 @@
         allReports = res.data;
         renderAdminReports(allReports);
       } catch(err) {
-        tbody.innerHTML = `<tr><td colspan="9" class="text-center text-red-500 py-8">${err.message}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="9" class="text-center text-red-500 py-10 text-lg">${err.message}</td></tr>`;
       }
     }
 
@@ -922,7 +956,7 @@
     function renderAdminReports(data) {
       const tbody = document.getElementById('reportTableBody');
       if(!data || data.length === 0) {
-         tbody.innerHTML = '<tr><td colspan="9" class="py-8 text-center text-slate-500">ไม่พบข้อมูล</td></tr>';
+         tbody.innerHTML = '<tr><td colspan="9" class="py-10 text-center text-slate-500 text-lg">ไม่พบข้อมูล</td></tr>';
          return;
       }
       const icon = (val) => val === 'ผ่าน' ? '✅' : (val === 'ไม่ผ่าน' ? '❌' : '-');
@@ -930,18 +964,19 @@
       data.forEach(row => {
         let isOk = (row.status === 'ปกติ');
         let sClass = isOk ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700';
+        
         html += `<tr class="bg-white hover:bg-slate-50 border-b border-slate-100 transition">
-          <td class="px-3 md:px-5 py-3 font-bold text-slate-800">${row.id}</td>
-          <td class="px-3 md:px-5 py-3 text-slate-600">${row.date}</td>
-          <td class="px-3 md:px-5 py-3 text-center"><span class="px-3 py-1 rounded-full text-xs font-bold ${sClass}">${row.status || '-'}</span></td>
-          <td class="px-2 md:px-4 py-3 text-center text-base">${icon(row.gauge)}</td>
-          <td class="px-2 md:px-4 py-3 text-center text-base">${icon(row.sealPin)}</td>
-          <td class="px-2 md:px-4 py-3 text-center text-base">${icon(row.hose)}</td>
-          <td class="px-2 md:px-4 py-3 text-center text-base">${icon(row.cylinder)}</td>
-          <td class="px-3 md:px-5 py-3 text-slate-700 truncate max-w-[120px]">${row.inspector}</td>
-          <td class="px-3 md:px-5 py-3 text-center flex justify-center space-x-2">
-            <button onclick="openEditReportModal('${row.id}', '${row.status}')" class="text-blue-600 bg-blue-50 hover:bg-blue-100 p-2 rounded-lg font-bold transition">✏️<span class="hidden sm:inline"> แก้ไข</span></button>
-            <button onclick="printRecord('${row.id}', '${row.date}', '${row.status}', '${row.inspector}', '${row.gauge}', '${row.sealPin}', '${row.hose}', '${row.cylinder}')" class="text-indigo-600 bg-indigo-50 hover:bg-indigo-100 p-2 rounded-lg font-bold transition">🖨️<span class="hidden sm:inline"> พิมพ์</span></button>
+          <td class="px-5 py-4 font-bold text-slate-800">${row.id}</td>
+          <td class="px-5 py-4 text-slate-600">${row.date}</td>
+          <td class="px-5 py-4 text-center"><span class="px-4 py-1.5 rounded-full text-sm font-bold ${sClass}">${row.status || '-'}</span></td>
+          <td class="px-4 py-4 text-center text-lg">${icon(row.gauge)}</td>
+          <td class="px-4 py-4 text-center text-lg">${icon(row.sealPin)}</td>
+          <td class="px-4 py-4 text-center text-lg">${icon(row.hose)}</td>
+          <td class="px-4 py-4 text-center text-lg">${icon(row.cylinder)}</td>
+          <td class="px-5 py-4 text-slate-700 truncate max-w-[150px] font-medium">${row.inspector}</td>
+          <td class="px-5 py-4 text-center flex justify-center space-x-3">
+            <button onclick="openEditReportModal('${row.id}', '${row.status}')" class="text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-2 rounded-xl font-bold transition">✏️ แก้ไข</button>
+            <button onclick="printRecord('${row.id}', '${row.date}', '${row.status}', '${row.inspector}', '${row.gauge}', '${row.sealPin}', '${row.hose}', '${row.cylinder}')" class="text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-3 py-2 rounded-xl font-bold transition">🖨️ พิมพ์</button>
           </td>
         </tr>`;
       });
@@ -951,7 +986,9 @@
     function exportReportExcel() {
       if (allReports.length === 0) { alert("ไม่มีข้อมูล"); return; }
       let csv = "\uFEFFรหัสถัง,วันที่และเวลา,สถานะภาพรวม,มาตรวัด,ซีล/สลัก,สายฉีด,สภาพถัง,ผู้ตรวจ\n";
-      allReports.forEach(r => { csv += `"${r.id}","${r.date}","${r.status}","${r.gauge}","${r.sealPin}","${r.hose}","${r.cylinder}","${r.inspector}"\n`; });
+      allReports.forEach(r => {
+        csv += `"${r.id}","${r.date}","${r.status}","${r.gauge}","${r.sealPin}","${r.hose}","${r.cylinder}","${r.inspector}"\n`;
+      });
       downloadCSV(csv, "ประวัติการตรวจเช็ค.csv");
     }
 
@@ -978,74 +1015,190 @@
         alert(res.message);
         document.getElementById('editReportModal').classList.add('hidden');
         loadReports();
-      } catch(err) { alert("ข้อผิดพลาด: " + err.message); } 
-      finally { btn.innerText = "บันทึกข้อมูล"; btn.disabled = false; }
+      } catch(err) {
+        alert("ข้อผิดพลาด: " + err.message);
+      } finally {
+        btn.innerText = "บันทึกข้อมูล"; btn.disabled = false;
+      }
+    }
+
+    // --- Helper Functions สำหรับจัดการวันที่และอายุ ---
+    function formatThaiDateShort(dateStr) {
+      if(!dateStr || dateStr === '-') return '-';
+      let d, m, y;
+      if(dateStr.includes('-')) {
+        [y, m, d] = dateStr.split('-');
+      } else if (dateStr.includes('/')) {
+        const parts = dateStr.split(' ')[0].split('/');
+        [d, m, y] = parts;
+        if(y.length === 2) y = "20" + y;
+      } else {
+        return dateStr;
+      }
+      const months = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+      const thYear = parseInt(y) > 2500 ? parseInt(y).toString().slice(-2) : (parseInt(y) + 543).toString().slice(-2);
+      return `${parseInt(d)} ${months[parseInt(m)-1]} ${thYear}`;
+    }
+
+    function calculateAge(dateStr) {
+      if(!dateStr || dateStr === '-') return '-';
+      let y, m, d;
+      if(dateStr.includes('-')) {
+          [y, m, d] = dateStr.split('-');
+      } else if (dateStr.includes('/')) {
+          const parts = dateStr.split(' ')[0].split('/');
+          [d, m, y] = parts;
+          if(y.length === 2) y = "20" + y;
+      } else return '-';
+
+      const entryDate = new Date(y, m-1, d);
+      const today = new Date();
+      let months = (today.getFullYear() - entryDate.getFullYear()) * 12;
+      months -= entryDate.getMonth();
+      months += today.getMonth();
+      
+      if(months <= 0) return 'ไม่ถึง 1 เดือน';
+      const yrs = Math.floor(months / 12);
+      const mos = months % 12;
+      let ageStr = '';
+      if(yrs > 0) ageStr += yrs + ' ปี ';
+      if(mos > 0) ageStr += mos + ' เดือน';
+      return ageStr.trim();
     }
 
 
-    // ================== ฝั่ง Inspector (สแกน & ฟอร์ม Custom Camera) ==================
-    let html5QrCode = null;
-
+    // ================== ฝั่ง Inspector (สแกน & ฟอร์ม) ==================
     function startScanView() {
+      stopScanner(false);
       document.getElementById('tab-inspector-scan').classList.remove('hidden');
       document.getElementById('tab-inspector-form').classList.add('hidden');
       window.scrollTo(0,0);
+      setCameraButtons(false);
+      setCameraStatus('แตะปุ่มเปิดกล้อง แล้วอนุญาตให้ใช้กล้องเมื่อระบบถาม', 'info');
     }
 
-    function startCameraScanner() {
-      const modal = document.getElementById('camera-modal');
-      const errBox = document.getElementById('camera-error');
-      modal.classList.remove('hidden');
-      errBox.classList.add('hidden');
+    function setCameraButtons(isRunning) {
+      const startBtn = document.getElementById('btnStartCamera');
+      const stopBtn = document.getElementById('btnStopCamera');
+      if(startBtn) {
+        startBtn.disabled = isRunning;
+        startBtn.classList.toggle('hidden', isRunning);
+      }
+      if(stopBtn) stopBtn.classList.toggle('hidden', !isRunning);
+    }
 
-      if (!html5QrCode) {
-        html5QrCode = new Html5Qrcode("reader");
+    function setCameraStatus(message, type = 'info') {
+      const status = document.getElementById('camera-status');
+      if(!status) return;
+      status.textContent = message;
+      status.className = 'camera-status rounded-2xl px-4 py-3 mb-4 text-left text-sm font-bold leading-relaxed' + (type === 'success' ? ' success' : (type === 'error' ? ' error' : ''));
+    }
+
+    function getCameraErrorMessage(err) {
+      const raw = String(err?.name || err?.message || err || '');
+      if(!window.isSecureContext && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+        return 'กล้องใช้งานได้เมื่อเปิดผ่าน HTTPS เท่านั้น';
+      }
+      if(raw.includes('NotAllowed') || raw.includes('Permission') || raw.includes('denied')) {
+        return 'ยังไม่ได้อนุญาตกล้อง กรุณากดอนุญาตในเบราว์เซอร์ แล้วลองใหม่';
+      }
+      if(raw.includes('NotFound') || raw.includes('Overconstrained')) {
+        return 'ไม่พบกล้องบนอุปกรณ์นี้ ลองใช้ปุ่มเลือกรูป QR แทน';
+      }
+      return 'เปิดกล้องไม่สำเร็จ กรุณาลองใหม่ หรือใช้ปุ่มเลือกรูปแทน';
+    }
+
+    async function startCameraScanner() {
+      if(!window.Html5Qrcode) {
+        setCameraStatus('โหลดระบบสแกน QR ไม่สำเร็จ กรุณารีเฟรชหน้าเว็บ', 'error');
+        return;
+      }
+      if(!window.isSecureContext && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+        setCameraStatus(getCameraErrorMessage(), 'error');
+        return;
       }
 
-      html5QrCode.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: { width: 250, height: 250 } },
-        (decodedText, decodedResult) => {
-          // Success
-          stopScanner();
-          let finalId = decodedText.trim();
-          if(finalId.includes('?id=')) finalId = finalId.split('?id=')[1];
-          else if(finalId.includes('entry.')) finalId = finalId.split('=').pop();
-          loadExtinguisherData(finalId);
-        },
-        (errorMessage) => {
-          // Ignore parse errors as they happen constantly when no QR is found
+      const startBtn = document.getElementById('btnStartCamera');
+      if(startBtn) startBtn.disabled = true;
+      setCameraStatus('กำลังเปิดกล้อง...', 'info');
+
+      try {
+        if(html5QrcodeScanner) await stopScanner(false);
+        html5QrcodeScanner = new Html5Qrcode('reader');
+        const config = {
+          fps: 10,
+          qrbox: (viewfinderWidth, viewfinderHeight) => {
+            const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+            const boxSize = Math.min(300, Math.floor(minEdge * 0.75));
+            return { width: boxSize, height: boxSize };
+          },
+          aspectRatio: 1.333
+        };
+        await html5QrcodeScanner.start({ facingMode: 'environment' }, config, onScanSuccess, () => {});
+        isScannerRunning = true;
+        setCameraButtons(true);
+        setCameraStatus('กำลังสแกน QR ให้วาง QR Code ให้อยู่กลางกรอบ', 'success');
+      } catch(err) {
+        try { if(html5QrcodeScanner) await html5QrcodeScanner.clear(); } catch(clearErr) {}
+        isScannerRunning = false;
+        html5QrcodeScanner = null;
+        setCameraButtons(false);
+        setCameraStatus(getCameraErrorMessage(err), 'error');
+      }
+    }
+
+    async function stopScanner(resetStatus = true) {
+      const scanner = html5QrcodeScanner;
+      const wasRunning = isScannerRunning;
+      html5QrcodeScanner = null;
+      isScannerRunning = false;
+      setCameraButtons(false);
+      try {
+        if(scanner) {
+          if(wasRunning) await scanner.stop();
+          await scanner.clear();
         }
-      ).catch((err) => {
-        // Camera start failed
-        errBox.classList.remove('hidden');
-        errBox.innerText = "กล้องถูกบล็อค โปรดอนุญาตสิทธิ์การเข้าถึงกล้องบนเบราว์เซอร์";
-      });
+      } catch(err) {}
+      if(resetStatus) setCameraStatus('แตะปุ่มเปิดกล้อง แล้วอนุญาตให้ใช้กล้องเมื่อระบบถาม', 'info');
     }
 
-    function stopScanner() {
-      if (html5QrCode) {
-        html5QrCode.stop().then(() => {
-          html5QrCode.clear();
-        }).catch(err => console.log(err));
+    async function onScanSuccess(decodedText) {
+      await stopScanner(false);
+      let finalId = String(decodedText || '').trim();
+      try {
+        const scannedUrl = new URL(finalId);
+        finalId = scannedUrl.searchParams.get('id') || finalId;
+      } catch(err) {
+        if(finalId.includes('?id=')) finalId = finalId.split('?id=')[1].split('&')[0];
+        else if(finalId.includes('entry.')) finalId = finalId.split('=').pop();
       }
-      document.getElementById('camera-modal').classList.add('hidden');
+      try { finalId = decodeURIComponent(finalId).trim(); } catch(err) { finalId = finalId.trim(); }
+      if(!finalId) {
+        setCameraStatus('ไม่พบรหัสถังใน QR Code กรุณาลองสแกนอีกครั้ง', 'error');
+        setCameraButtons(false);
+        return;
+      }
+      loadExtinguisherData(finalId);
     }
 
-    function scanFromFile(event) {
+    async function scanFromFile(event) {
       if (event.target.files.length == 0) return;
       const file = event.target.files[0];
-      if (!html5QrCode) html5QrCode = new Html5Qrcode("reader"); 
-      
-      html5QrCode.scanFile(file, true)
-      .then(text => { 
-        let finalId = text.trim();
-        if(finalId.includes('?id=')) finalId = finalId.split('?id=')[1];
-        else if(finalId.includes('entry.')) finalId = finalId.split('=').pop();
-        loadExtinguisherData(finalId); 
-      })
-      .catch(err => alert("ไม่พบ QR Code หรือรูปภาพไม่ชัดเจน"));
-      event.target.value = '';
+      let fileScanner = null;
+      try {
+        await stopScanner(false);
+        setCameraStatus('กำลังอ่าน QR จากรูปภาพ...', 'info');
+        fileScanner = new Html5Qrcode('reader');
+        const text = await fileScanner.scanFile(file, true);
+        await fileScanner.clear();
+        await onScanSuccess(text);
+      } catch(err) {
+        setCameraStatus('ไม่พบ QR Code หรือรูปภาพไม่ชัด', 'error');
+        alert('ไม่พบ QR Code หรือรูปภาพไม่ชัดเจน');
+      } finally {
+        try { if(fileScanner) await fileScanner.clear(); } catch(err) {}
+        event.target.value = '';
+      }
     }
 
     async function loadExtinguisherData(id) {
@@ -1062,61 +1215,62 @@
       document.getElementById('tab-inspector-scan').classList.add('hidden');
       document.getElementById('tab-inspector-form').classList.remove('hidden');
       
+      // รีเซ็ตฟอร์ม
       document.getElementById('inspectionForm').reset();
-      document.getElementById('successMessage').classList.add('hidden');
       document.getElementById('inspectionForm').classList.remove('hidden');
+      document.getElementById('successMessage').classList.add('hidden');
 
-      document.getElementById('info-id').innerText = data.info.id;
-      document.getElementById('info-loc').innerText = data.info.loc;
-      document.getElementById('info-type').innerText = data.info.type;
-      document.getElementById('info-dateEntry').innerText = data.info.dateEntry || '-';
-      document.getElementById('extinguisherId').value = data.info.id;
+      const info = data.info;
+      const history = data.history || [];
 
-      currentExtinguisherHistory = data.history || [];
-      renderLocalHistory(currentExtinguisherHistory);
-      window.scrollTo(0,0);
-    }
+      // ใส่ค่าให้ Form Input
+      document.getElementById('extinguisherId').value = info.id;
 
-    function filterLocalHistory() {
-      const mFilter = document.getElementById('historyFilterMonth').value;
-      if(!mFilter) { renderLocalHistory(currentExtinguisherHistory); return; }
-      const filtered = currentExtinguisherHistory.filter(row => {
-         if(row.date) {
-           const parts = row.date.split(' ');
-           const dateParts = parts[0].split('/'); 
-           if(dateParts.length >= 3) {
-             let yStr = dateParts[2];
-             if(yStr.length === 2) yStr = "20" + yStr;
-             return `${yStr}-${dateParts[1]}` === mFilter;
-           }
-         }
-         return true;
-      });
-      renderLocalHistory(filtered);
-    }
+      // ---- อัปเดต Top Card (Header) ----
+      document.getElementById('info-id-header').innerText = info.id;
+      document.getElementById('info-loc-header').innerText = info.loc;
+      document.getElementById('info-type-header').innerText = info.type;
 
-    function renderLocalHistory(dataArr) {
-      const tbody = document.getElementById('historyTableBody');
-      if(!dataArr || dataArr.length === 0) {
-         tbody.innerHTML = '<tr><td colspan="7" class="py-6 text-center text-slate-400">ไม่พบประวัติย้อนหลัง</td></tr>';
-         return;
+      // ---- อัปเดต Middle Card (ข้อมูลถัง) ----
+      document.getElementById('info-type-detail').innerText = info.type;
+      document.getElementById('info-loc-detail').innerText = info.loc;
+      document.getElementById('info-dateEntry-detail').innerText = formatThaiDateShort(info.dateEntry);
+      document.getElementById('info-age').innerText = calculateAge(info.dateEntry);
+      document.getElementById('info-check-count').innerText = history.length + " ครั้ง";
+
+      // ---- อัปเดตประวัติล่าสุด & ป้ายสถานะ ----
+      const badgeBox = document.getElementById('info-status-badge');
+      const lastCheckText = document.getElementById('info-last-check');
+      const recentUl = document.getElementById('info-recent-history');
+      recentUl.innerHTML = '';
+
+      if (history.length > 0) {
+        const lastRec = history[0];
+        lastCheckText.innerText = "ตรวจล่าสุด : " + formatThaiDateShort(lastRec.date);
+
+        if(lastRec.status === 'ปกติ') {
+          badgeBox.innerHTML = `<span class="bg-emerald-100 text-emerald-700 px-4 py-1.5 rounded-full text-sm font-bold shadow-sm">🟢 พร้อมใช้งาน</span>`;
+        } else {
+          badgeBox.innerHTML = `<span class="bg-rose-100 text-rose-700 px-4 py-1.5 rounded-full text-sm font-bold shadow-sm">🔴 ชำรุด</span>`;
+        }
+
+        // วนลูปโชว์ประวัติ 5 อันดับล่าสุด
+        const recentHistory = history.slice(0, 5);
+        recentHistory.forEach(rec => {
+           let isOk = rec.status === 'ปกติ';
+           let icon = isOk ? `<span class="text-emerald-600">✓ ปกติ</span>` : `<span class="text-rose-600">❌ ชำรุด</span>`;
+           recentUl.innerHTML += `<li class="flex justify-between items-center py-2 border-b border-slate-100 last:border-0">
+             <span class="text-slate-600 font-medium">${formatThaiDateShort(rec.date)}</span>
+             <span class="font-bold text-sm">${icon}</span>
+           </li>`;
+        });
+      } else {
+        lastCheckText.innerText = "ยังไม่เคยตรวจเช็ค";
+        badgeBox.innerHTML = `<span class="bg-slate-200 text-slate-700 px-4 py-1.5 rounded-full text-sm font-bold shadow-sm">⚪ รอการตรวจ</span>`;
+        recentUl.innerHTML = `<li class="text-center py-4 text-slate-400 text-sm">ไม่มีประวัติการตรวจเช็ค</li>`;
       }
-      const icon = (val) => val === 'ผ่าน' ? '✅' : (val === 'ไม่ผ่าน' ? '❌' : '-');
-      let html = '';
-      dataArr.forEach(row => {
-        let isOk = (row.status === 'ปกติ');
-        let sClass = isOk ? 'text-emerald-600' : 'text-rose-600';
-        html += `<tr class="bg-white border-b border-slate-100 hover:bg-slate-50 transition">
-          <td class="px-3 py-2 whitespace-nowrap">${row.date}</td>
-          <td class="px-2 py-2 text-center font-bold ${sClass}">${row.status || '-'}</td>
-          <td class="px-2 py-2 text-center">${icon(row.gauge)}</td>
-          <td class="px-2 py-2 text-center">${icon(row.sealPin)}</td>
-          <td class="px-2 py-2 text-center">${icon(row.hose)}</td>
-          <td class="px-2 py-2 text-center">${icon(row.cylinder)}</td>
-          <td class="px-3 py-2 truncate max-w-[120px]">${row.inspector}</td>
-        </tr>`;
-      });
-      tbody.innerHTML = html;
+
+      window.scrollTo(0,0);
     }
 
     async function submitInspection(event) {
@@ -1141,48 +1295,21 @@
 
       try {
         await fetchAPI('addReport', data);
+        
         form.classList.add('hidden');
         document.getElementById('successMessage').classList.remove('hidden');
         
         const feedback = document.getElementById("resultFeedback");
         if(isAllPass) {
-          feedback.innerHTML = `<span class="text-emerald-600 font-bold text-lg md:text-xl">✅ สถานะ: ปกติ (พร้อมใช้งาน)</span>`;
+          feedback.innerHTML = `<span class="text-emerald-600 font-bold text-2xl">✅ ปกติ (พร้อมใช้งาน)</span>`;
         } else {
-          feedback.innerHTML = `<span class="text-rose-600 font-bold text-lg md:text-xl">❌ สถานะ: ชำรุด (แจ้งซ่อม)</span>`;
+          feedback.innerHTML = `<span class="text-rose-600 font-bold text-2xl">❌ ชำรุด (แจ้งซ่อม)</span>`;
         }
       } catch(err) {
         alert(err.message);
       } finally {
-        btn.innerText = "💾 บันทึกผล"; btn.disabled = false;
+        btn.innerText = "💾 บันทึกผลตรวจ"; btn.disabled = false;
       }
-    }
-
-    // ================== พิมพ์ใบสลิป ==================
-    function printRecord(id, date, status, inspector, gauge, sealPin, hose, cylinder) {
-      document.getElementById('print-id').innerText = id;
-      document.getElementById('print-date').innerText = date;
-      document.getElementById('print-inspector').innerText = inspector;
-      document.getElementById('print-status').innerText = status;
-      document.getElementById('print-status').className = status === 'ปกติ' ? 'text-green-600 font-bold' : 'text-red-600 font-bold';
-
-      const getIcon = (val) => val === 'ผ่าน' ? '✅ ผ่าน' : (val === 'ไม่ผ่าน' ? '❌ ไม่ผ่าน' : '-');
-      document.getElementById('print-gauge').innerText = getIcon(gauge);
-      document.getElementById('print-seal').innerText = getIcon(sealPin);
-      document.getElementById('print-hose').innerText = getIcon(hose);
-      document.getElementById('print-cylinder').innerText = getIcon(cylinder);
-      document.getElementById('print-sign-name').innerText = inspector;
-      
-      const printSec = document.getElementById('print-section');
-      printSec.classList.remove('hidden');
-      
-      document.querySelectorAll('style, nav, main, header, #loading-overlay').forEach(el => {
-         if(el.tagName !== 'STYLE') el.classList.add('print:hidden');
-      });
-
-      setTimeout(() => { 
-        window.print(); 
-        printSec.classList.add('hidden');
-      }, 300);
     }
   </script>
 </body>
