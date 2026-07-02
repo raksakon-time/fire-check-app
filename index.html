@@ -20,7 +20,7 @@
     input:focus, select:focus, textarea:focus {
       background-color: #ffffff;
       box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-      border-color: #f43f5e !important;
+      border-color: #3b82f6 !important;
       outline: none;
     }
     
@@ -59,7 +59,7 @@
     .camera-status { border: 1px solid #bfdbfe; background: #eff6ff; color: #1e3a8a; }
     .camera-status.success { border-color: #bbf7d0; background: #f0fdf4; color: #166534; }
     .camera-status.error { border-color: #fecdd3; background: #fff1f2; color: #be123c; }
-    .camera-primary-action:disabled { opacity: 0.7; cursor: wait; }
+    
     @media (max-width: 640px) {
       #reader, #reader video { min-height: 58vh; }
       #reader-container { min-height: 58vh !important; }
@@ -68,8 +68,8 @@
     #loading-overlay { display: none; }
     #loading-overlay.active { display: flex; }
     
-    /* Custom Scrollbar for compact tables */
-    .table-container::-webkit-scrollbar { height: 8px; width: 8px; } /* เพิ่ม width สำหรับ scroll แนวตั้ง */
+    /* Custom Scrollbar */
+    .table-container::-webkit-scrollbar { height: 8px; width: 8px; }
     .table-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
     .table-container::-webkit-scrollbar-track { background: #f1f5f9; }
     
@@ -86,15 +86,17 @@
 </head>
 <body class="text-slate-800 min-h-screen text-base">
 
+  <!-- ================= Loading Overlay ================= -->
   <div id="loading-overlay" class="fixed inset-0 bg-white/90 backdrop-blur-sm z-[200] items-center justify-center flex-col">
-    <div class="animate-spin rounded-full h-14 w-14 border-b-4 border-rose-600 mb-4"></div>
+    <div class="animate-spin rounded-full h-14 w-14 border-b-4 border-blue-600 mb-4"></div>
     <p class="text-slate-800 text-base font-bold" id="loading-text">กำลังประสานข้อมูล...</p>
   </div>
 
+  <!-- ================= หน้าเข้าสู่ระบบ (Login Screen) ================= -->
   <div id="login-screen" class="fixed inset-0 bg-slate-900 z-[100] flex items-center justify-center p-4">
     <div class="bg-white rounded-[2rem] shadow-2xl p-8 md:p-10 w-full max-w-md">
       <div class="text-center mb-8 border-b border-gray-100 pb-6">
-        <div class="inline-flex items-center justify-center w-20 h-20 bg-rose-100 text-rose-600 rounded-full mb-4 shadow-inner">
+        <div class="inline-flex items-center justify-center w-20 h-20 bg-blue-100 text-blue-600 rounded-full mb-4 shadow-inner">
           <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"></path></svg>
         </div>
         <h2 class="text-3xl font-bold text-gray-900 tracking-tight">FireCheck System</h2>
@@ -103,9 +105,9 @@
       
       <!-- พนักงานตรวจเช็คเข้าได้เลย -->
       <div class="mb-8">
-        <button onclick="loginAsInspector()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition shadow-[0_4px_14px_rgba(37,99,235,0.4)] flex items-center justify-center gap-2 text-lg">
+        <button onclick="loginAsInspector()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition shadow-[0_4px_14px_rgba(37,99,235,0.4)] flex items-center justify-center gap-2 text-lg active:scale-95">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-          ตรวจเช็ค(เริ่มสแกนทันที)
+          ตรวจเช็ค (เริ่มสแกนทันที)
         </button>
       </div>
 
@@ -122,23 +124,24 @@
           เข้าสู่ระบบ Admin
         </h3>
         <div>
-          <input type="text" id="login-user" required placeholder="ชื่อผู้ใช้งาน (admin)" class="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl transition text-base">
+          <input type="text" id="login-user" required placeholder="ชื่อผู้ใช้งาน (admin)" class="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl transition text-base focus:ring-blue-500">
         </div>
         <div>
-          <input type="password" id="login-pass" required placeholder="รหัสผ่าน (1234)" class="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl transition text-base">
+          <input type="password" id="login-pass" required placeholder="รหัสผ่าน (1234)" class="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl transition text-base focus:ring-blue-500">
         </div>
         <p id="login-error" class="hidden text-sm text-rose-600 text-center font-bold mt-2">❌ ข้อมูลผู้ใช้งานไม่ถูกต้อง!</p>
-        <button type="submit" class="w-full bg-slate-800 hover:bg-black text-white font-bold py-3.5 rounded-xl transition mt-4 text-base shadow-md">เข้าสู่ระบบการจัดการ</button>
+        <button type="submit" class="w-full bg-slate-800 hover:bg-black text-white font-bold py-3.5 rounded-xl transition mt-4 text-base shadow-md active:scale-95">เข้าสู่ระบบการจัดการ</button>
       </form>
     </div>
   </div>
 
+  <!-- ================= แอปพลิเคชันหลัก ================= -->
   <div id="main-app" class="hidden">
     
     <!-- แถบด้านบน (App Header) -->
     <header id="app-header" class="fixed top-0 w-full text-white shadow-lg z-[40] px-4 md:px-8 py-3 flex justify-between items-center bg-slate-900">
       <div class="flex items-center space-x-3 w-auto md:w-1/4">
-        <svg class="w-7 h-7 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"></path></svg>
+        <svg class="w-7 h-7 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"></path></svg>
         <h1 id="header-title" class="font-bold text-lg md:text-xl tracking-wide whitespace-nowrap">FireCheck</h1>
       </div>
 
@@ -197,14 +200,24 @@
                 <input type="date" id="newInvDateDispose" class="w-full px-4 py-3 border border-slate-300 rounded-xl text-slate-500 text-base">
               </div>
               <div class="md:col-span-1 flex items-end">
-                <button type="submit" id="btnGenQR" class="w-full bg-slate-800 hover:bg-black text-white font-bold py-3.5 rounded-xl shadow-[0_4px_14px_rgba(0,0,0,0.2)] transition text-base">
+                <button type="submit" id="btnGenQR" class="w-full bg-slate-800 hover:bg-black text-white font-bold py-3.5 rounded-xl shadow-[0_4px_14px_rgba(0,0,0,0.2)] transition text-base active:scale-95">
                   บันทึกเข้าระบบ
                 </button>
               </div>
             </div>
-            <!-- เพิ่มความสูงสูงสุด (max-h-[500px]) และการเลื่อนแนวตั้ง (overflow-y-auto) เข้าไปที่นี่ -->
+          </form>
+
+          <div>
+            <div class="flex flex-col md:flex-row md:justify-between md:items-end gap-4 mb-4 border-t pt-8 border-slate-100">
+              <h3 class="font-bold text-slate-800 text-xl">รายการในระบบ</h3>
+              <div class="flex flex-wrap gap-2">
+                <button onclick="exportInventoryExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold px-4 py-2.5 rounded-xl shadow-sm transition">📥 ส่งออก Excel</button>
+                <button onclick="printInventoryList()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold px-4 py-2.5 rounded-xl shadow-sm transition">🖨️ พิมพ์รายงาน</button>
+                <button onclick="loadInventory()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold px-4 py-2.5 rounded-xl shadow-sm transition">🔄 รีเฟรชข้อมูล</button>
+              </div>
+            </div>
+            <!-- ตารางแบบ Scrollable -->
             <div class="table-container overflow-x-auto overflow-y-auto max-h-[500px] rounded-2xl border border-slate-200 shadow-sm relative">
-              <!-- ทำให้หัวตารางติดหนึบ (sticky) เมื่อเลื่อนลงมา -->
               <table class="w-full text-left whitespace-nowrap relative">
                 <thead class="text-sm text-slate-600 bg-slate-100 uppercase font-bold border-b border-slate-300 sticky top-0 z-10">
                   <tr>
@@ -238,6 +251,7 @@
             </button>
           </div>
           
+          <!-- ส่วนตัวกรอง (Filters) -->
           <div class="flex flex-col sm:flex-row gap-4 mb-8 bg-blue-50/50 p-5 rounded-2xl border border-blue-100">
             <div class="flex-1">
               <label class="block text-sm font-bold text-blue-900 mb-1.5">ค้นหาเดือน</label>
@@ -254,9 +268,8 @@
             </div>
           </div>
 
-          <!-- เพิ่มความสูงสูงสุด (max-h-[500px]) และการเลื่อนแนวตั้ง (overflow-y-auto) เข้าไปที่นี่ -->
+          <!-- ตารางแบบ Scrollable -->
           <div class="table-container overflow-x-auto overflow-y-auto max-h-[500px] rounded-2xl border border-slate-200 shadow-sm relative">
-            <!-- ทำให้หัวตารางติดหนึบ (sticky) เมื่อเลื่อนลงมา -->
             <table class="w-full text-left whitespace-nowrap relative">
               <thead class="text-sm text-slate-600 bg-slate-100 uppercase font-bold border-b border-slate-300 sticky top-0 z-10">
                 <tr>
@@ -279,6 +292,7 @@
         </div>
       </div>
 
+      <!-- ================= ส่วนของ Inspector: สแกน ================= -->
       <div id="tab-inspector-scan" class="hidden">
         <div class="flex flex-col items-center justify-center pt-4 md:pt-10">
           <div class="bg-white p-8 md:p-10 rounded-[2rem] shadow-xl w-full max-w-md text-center border border-slate-100">
@@ -286,7 +300,7 @@
               <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
             </div>
             <h2 class="text-3xl font-bold text-slate-900 mb-3">สแกน QR Code</h2>
-            <p class="text-base text-slate-500 mb-8 leading-relaxed">กรุณาหันกล้องไปที่ QR Code<br/>ซึ่งติดอยู่บริเวณตัวถังดับเพลิง</p>
+            <p class="text-base text-slate-500 mb-6 leading-relaxed">กรุณาหันกล้องไปที่ QR Code<br/>ซึ่งติดอยู่บริเวณตัวถังดับเพลิง</p>
             
             <div id="camera-status" role="status" aria-live="polite" class="camera-status rounded-2xl px-4 py-3 mb-4 text-left text-sm font-bold leading-relaxed">
               แตะปุ่มเปิดกล้อง แล้วอนุญาตให้ใช้กล้องเมื่อระบบถาม
@@ -297,7 +311,7 @@
             </div>
 
             <div class="grid grid-cols-1 gap-3">
-              <button type="button" id="btnStartCamera" onclick="startCameraScanner()" aria-label="เปิดกล้องเพื่อสแกน QR Code" class="camera-primary-action bg-blue-600 hover:bg-blue-700 text-white w-full py-5 rounded-2xl font-bold text-xl shadow-[0_4px_14px_rgba(37,99,235,0.35)] active:scale-95 transition">
+              <button type="button" id="btnStartCamera" onclick="startCameraScanner()" class="camera-primary-action bg-blue-600 hover:bg-blue-700 text-white w-full py-5 rounded-2xl font-bold text-xl shadow-[0_4px_14px_rgba(37,99,235,0.35)] active:scale-95 transition">
                 เปิดกล้องสแกน QR
               </button>
               <button type="button" id="btnStopCamera" onclick="stopScanner()" class="hidden bg-slate-100 hover:bg-slate-200 text-slate-800 w-full py-4 rounded-xl font-bold text-lg transition border border-slate-200">
@@ -312,153 +326,158 @@
         </div>
       </div>
 
+      <!-- ================= ส่วนของ Inspector: ฟอร์มหลังสแกน (Dashboard UI) ================= -->
       <div id="tab-inspector-form" class="hidden">
         
         <!-- Header Card (ส่วนหัวแบบ Dashboard) -->
-        <div class="bg-white border-l-8 border-blue-600 shadow-sm rounded-3xl p-5 md:p-6 mb-4 flex justify-between items-start">
+        <div class="bg-white border-l-8 border-blue-600 shadow-sm rounded-3xl p-5 md:p-6 mb-4 flex flex-col md:flex-row md:justify-between items-start md:items-center gap-4">
           <div>
-            <h2 class="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight" id="info-id-header">-</h2>
-            <p class="text-sm font-medium text-gray-600 mt-1" id="info-loc-header">-</p>
+            <h2 class="text-3xl font-bold text-gray-900 tracking-tight" id="info-id-header">-</h2>
+            <p class="text-base font-medium text-gray-600 mt-1" id="info-loc-header">-</p>
             <p class="text-sm text-gray-500" id="info-type-header">-</p>
             <div class="mt-3 flex items-center gap-2">
-              <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-              <p class="text-sm font-bold text-blue-700" id="info-last-check">ตรวจล่าสุด : -</p>
+              <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              <p class="text-base font-bold text-blue-700" id="info-last-check">ตรวจล่าสุด : -</p>
             </div>
           </div>
-          <div id="info-status-badge">
-            <!-- Badge จะถูกสร้างด้วย JS -->
+          <div class="flex flex-col items-end gap-3 w-full md:w-auto">
+            <div id="info-status-badge"></div>
+            <button onclick="startScanView()" class="w-full md:w-auto text-sm font-bold text-slate-600 bg-slate-100 px-4 py-2.5 rounded-xl border border-slate-200 shadow-sm hover:bg-slate-200 transition">
+              ↩️ สแกนถังใหม่
+            </button>
           </div>
         </div>
 
         <!-- Middle Section (แบ่ง 2 คอลัมน์) -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
           <!-- กล่องข้อมูลถัง -->
-          <div class="bg-slate-50 shadow-sm rounded-3xl p-5 border border-slate-200">
-            <h3 class="font-bold text-slate-800 text-base mb-3 border-b border-slate-200 pb-2 flex items-center gap-2">
-              <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-              ข้อมูลถัง
-            </h3>
-            <ul class="space-y-2.5 text-sm text-slate-600">
-              <li class="flex justify-between border-b border-slate-100 pb-1"><span>ประเภท</span> <span class="font-bold text-slate-900" id="info-type-detail">-</span></li>
-              <li class="flex justify-between border-b border-slate-100 pb-1"><span>ตำแหน่ง</span> <span class="font-bold text-slate-900" id="info-loc-detail">-</span></li>
-              <li class="flex justify-between border-b border-slate-100 pb-1"><span>วันที่รับเข้า</span> <span class="font-bold text-slate-900" id="info-dateEntry-detail">-</span></li>
-              <li class="flex justify-between border-b border-slate-100 pb-1"><span>อายุถัง</span> <span class="font-bold text-blue-600" id="info-age">-</span></li>
-              <li class="flex justify-between"><span>จำนวนครั้งที่ตรวจ</span> <span class="font-bold text-blue-600" id="info-check-count">-</span></li>
-            </ul>
+          <div class="bg-slate-50 shadow-sm rounded-3xl p-0 overflow-hidden border border-slate-200 h-full">
+            <div class="bg-slate-100 px-5 py-4 border-b border-slate-200">
+              <h3 class="font-bold text-slate-800 text-lg">ข้อมูลถัง</h3>
+            </div>
+            <table class="w-full text-base">
+              <tbody class="divide-y divide-slate-100">
+                <tr><td class="px-5 py-4 text-slate-500 w-1/3">ประเภท</td><td class="px-5 py-4 font-bold text-slate-800" id="dash-info-type">-</td></tr>
+                <tr><td class="px-5 py-4 text-slate-500">ตำแหน่ง</td><td class="px-5 py-4 font-bold text-slate-800" id="dash-info-loc">-</td></tr>
+                <tr><td class="px-5 py-4 text-slate-500">วันที่รับเข้า</td><td class="px-5 py-4 font-bold text-slate-800" id="dash-info-entry">-</td></tr>
+                <tr><td class="px-5 py-4 text-slate-500">อายุถัง</td><td class="px-5 py-4 font-bold text-slate-800" id="dash-info-age">-</td></tr>
+              </tbody>
+            </table>
           </div>
 
           <!-- กล่องประวัติล่าสุด -->
-          <div class="bg-slate-50 shadow-sm rounded-3xl p-5 border border-slate-200">
-            <h3 class="font-bold text-slate-800 text-base mb-3 border-b border-slate-200 pb-2 flex items-center gap-2">
-              <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
-              ประวัติการตรวจล่าสุด
-            </h3>
-            <ul class="space-y-2 text-sm" id="info-recent-history">
-              <!-- ประวัติจะถูกใส่ด้วย JS -->
-            </ul>
+          <div class="bg-slate-50 shadow-sm rounded-3xl p-0 overflow-hidden border border-slate-200 h-full flex flex-col">
+            <div class="bg-slate-100 px-5 py-4 border-b border-slate-200">
+              <h3 class="font-bold text-slate-800 text-lg">ประวัติการตรวจล่าสุด</h3>
+            </div>
+            <div class="flex-1 overflow-y-auto max-h-[250px] table-container">
+              <table class="w-full text-base relative">
+                <tbody class="divide-y divide-slate-100" id="dash-history-list">
+                  <!-- JS populated -->
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
 
-        <!-- ฟอร์มบันทึกผลรอบใหม่ -->
-        <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 md:p-8 mb-6 relative overflow-hidden">
-          <div class="absolute top-0 left-0 w-full h-1.5 bg-rose-600"></div>
+        <!-- ฟอร์มบันทึกใหม่ -->
+        <div class="bg-white rounded-[2rem] shadow-sm border border-slate-200 p-6 md:p-8 mb-6 relative overflow-hidden">
+          <div class="absolute top-0 left-0 w-full h-1.5 bg-blue-600"></div>
           
-          <div class="flex justify-between items-center mb-6">
-            <h3 class="font-bold text-slate-900 text-xl flex items-center gap-2">
-              📝 บันทึกผลตรวจรอบใหม่
-            </h3>
-            <button onclick="startScanView()" class="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg hover:bg-slate-200 transition">
-              ✖ ยกเลิก
-            </button>
-          </div>
+          <h3 class="font-bold text-slate-900 text-2xl mb-6">📝 บันทึกผลตรวจรอบใหม่</h3>
 
           <form id="inspectionForm" onsubmit="submitInspection(event)">
             <input type="hidden" id="extinguisherId" name="extinguisherId">
             
             <div class="mb-6">
-              <label class="block text-sm font-bold text-slate-700 mb-2">ชื่อผู้ตรวจ</label>
-              <input type="text" name="inspector" required placeholder="ระบุชื่อผู้ตรวจสอบ..." class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-rose-500 text-base transition">
+              <label class="block text-base font-bold text-slate-700 mb-2">ชื่อผู้ตรวจ</label>
+              <input type="text" name="inspector" required placeholder="ระบุชื่อผู้ตรวจสอบ..." class="w-full px-5 py-4 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 text-lg transition">
             </div>
 
-            <!-- รายการตรวจเช็ค (UI แบบแนวนอน) -->
-            <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 mb-6">
-              <div class="flex items-center justify-between py-3 border-b border-slate-200 last:border-0">
-                <label class="text-sm font-bold text-slate-800">1. มาตรวัดแรงดัน <span class="hidden sm:inline text-xs font-normal text-emerald-600">(สีเขียว)</span></label>
+            <!-- รายการตรวจเช็คแบบการ์ด -->
+            <div class="bg-slate-50 border border-slate-200 rounded-2xl p-5 mb-8 space-y-4">
+              
+              <!-- Item 1 -->
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-white rounded-xl border border-slate-100 shadow-sm">
+                <label class="text-base font-bold text-slate-800">1. มาตรวัดแรงดัน <span class="text-sm font-normal text-emerald-600 block sm:inline">(ชี้ในแถบสีเขียว)</span></label>
                 <div class="flex gap-4">
-                  <label class="flex items-center gap-1.5 cursor-pointer group">
-                    <input type="radio" name="gauge" value="ผ่าน" required class="w-5 h-5 accent-emerald-600">
-                    <span class="text-sm font-bold text-slate-600 group-hover:text-emerald-700">ผ่าน</span>
+                  <label class="flex items-center gap-2 cursor-pointer group">
+                    <input type="radio" name="gauge" value="ผ่าน" required class="w-6 h-6 accent-emerald-600">
+                    <span class="text-base font-bold text-slate-600 group-hover:text-emerald-700">ผ่าน</span>
                   </label>
-                  <label class="flex items-center gap-1.5 cursor-pointer group">
-                    <input type="radio" name="gauge" value="ไม่ผ่าน" class="w-5 h-5 accent-rose-600">
-                    <span class="text-sm font-bold text-slate-600 group-hover:text-rose-700">ไม่ผ่าน</span>
+                  <label class="flex items-center gap-2 cursor-pointer group">
+                    <input type="radio" name="gauge" value="ไม่ผ่าน" class="w-6 h-6 accent-rose-600">
+                    <span class="text-base font-bold text-slate-600 group-hover:text-rose-700">ไม่ผ่าน</span>
                   </label>
                 </div>
               </div>
               
-              <div class="flex items-center justify-between py-3 border-b border-slate-200 last:border-0">
-                <label class="text-sm font-bold text-slate-800">2. ซีลและสลัก <span class="hidden sm:inline text-xs font-normal text-slate-500">(สมบูรณ์)</span></label>
+              <!-- Item 2 -->
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-white rounded-xl border border-slate-100 shadow-sm">
+                <label class="text-base font-bold text-slate-800">2. ซีลและสลัก <span class="text-sm font-normal text-slate-500 block sm:inline">(อยู่ครบ สมบูรณ์)</span></label>
                 <div class="flex gap-4">
-                  <label class="flex items-center gap-1.5 cursor-pointer group">
-                    <input type="radio" name="sealPin" value="ผ่าน" required class="w-5 h-5 accent-emerald-600">
-                    <span class="text-sm font-bold text-slate-600 group-hover:text-emerald-700">ผ่าน</span>
+                  <label class="flex items-center gap-2 cursor-pointer group">
+                    <input type="radio" name="sealPin" value="ผ่าน" required class="w-6 h-6 accent-emerald-600">
+                    <span class="text-base font-bold text-slate-600 group-hover:text-emerald-700">ผ่าน</span>
                   </label>
-                  <label class="flex items-center gap-1.5 cursor-pointer group">
-                    <input type="radio" name="sealPin" value="ไม่ผ่าน" class="w-5 h-5 accent-rose-600">
-                    <span class="text-sm font-bold text-slate-600 group-hover:text-rose-700">ไม่ผ่าน</span>
+                  <label class="flex items-center gap-2 cursor-pointer group">
+                    <input type="radio" name="sealPin" value="ไม่ผ่าน" class="w-6 h-6 accent-rose-600">
+                    <span class="text-base font-bold text-slate-600 group-hover:text-rose-700">ไม่ผ่าน</span>
                   </label>
                 </div>
               </div>
 
-              <div class="flex items-center justify-between py-3 border-b border-slate-200 last:border-0">
-                <label class="text-sm font-bold text-slate-800">3. สายฉีด <span class="hidden sm:inline text-xs font-normal text-slate-500">(ไม่ปริแตก)</span></label>
+              <!-- Item 3 -->
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-white rounded-xl border border-slate-100 shadow-sm">
+                <label class="text-base font-bold text-slate-800">3. สายฉีด <span class="text-sm font-normal text-slate-500 block sm:inline">(ไม่ปริแตก/ไม่มีรังแมลง)</span></label>
                 <div class="flex gap-4">
-                  <label class="flex items-center gap-1.5 cursor-pointer group">
-                    <input type="radio" name="hose" value="ผ่าน" required class="w-5 h-5 accent-emerald-600">
-                    <span class="text-sm font-bold text-slate-600 group-hover:text-emerald-700">ผ่าน</span>
+                  <label class="flex items-center gap-2 cursor-pointer group">
+                    <input type="radio" name="hose" value="ผ่าน" required class="w-6 h-6 accent-emerald-600">
+                    <span class="text-base font-bold text-slate-600 group-hover:text-emerald-700">ผ่าน</span>
                   </label>
-                  <label class="flex items-center gap-1.5 cursor-pointer group">
-                    <input type="radio" name="hose" value="ไม่ผ่าน" class="w-5 h-5 accent-rose-600">
-                    <span class="text-sm font-bold text-slate-600 group-hover:text-rose-700">ไม่ผ่าน</span>
+                  <label class="flex items-center gap-2 cursor-pointer group">
+                    <input type="radio" name="hose" value="ไม่ผ่าน" class="w-6 h-6 accent-rose-600">
+                    <span class="text-base font-bold text-slate-600 group-hover:text-rose-700">ไม่ผ่าน</span>
                   </label>
                 </div>
               </div>
 
-              <div class="flex items-center justify-between py-3 border-b border-slate-200 last:border-0">
-                <label class="text-sm font-bold text-slate-800">4. สภาพตัวถัง <span class="hidden sm:inline text-xs font-normal text-slate-500">(ไม่บุบ/สนิม)</span></label>
+              <!-- Item 4 -->
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-white rounded-xl border border-slate-100 shadow-sm">
+                <label class="text-base font-bold text-slate-800">4. สภาพตัวถัง <span class="text-sm font-normal text-slate-500 block sm:inline">(ไม่มีรอยบุบ/สนิม)</span></label>
                 <div class="flex gap-4">
-                  <label class="flex items-center gap-1.5 cursor-pointer group">
-                    <input type="radio" name="cylinder" value="ผ่าน" required class="w-5 h-5 accent-emerald-600">
-                    <span class="text-sm font-bold text-slate-600 group-hover:text-emerald-700">ผ่าน</span>
+                  <label class="flex items-center gap-2 cursor-pointer group">
+                    <input type="radio" name="cylinder" value="ผ่าน" required class="w-6 h-6 accent-emerald-600">
+                    <span class="text-base font-bold text-slate-600 group-hover:text-emerald-700">ผ่าน</span>
                   </label>
-                  <label class="flex items-center gap-1.5 cursor-pointer group">
-                    <input type="radio" name="cylinder" value="ไม่ผ่าน" class="w-5 h-5 accent-rose-600">
-                    <span class="text-sm font-bold text-slate-600 group-hover:text-rose-700">ไม่ผ่าน</span>
+                  <label class="flex items-center gap-2 cursor-pointer group">
+                    <input type="radio" name="cylinder" value="ไม่ผ่าน" class="w-6 h-6 accent-rose-600">
+                    <span class="text-base font-bold text-slate-600 group-hover:text-rose-700">ไม่ผ่าน</span>
                   </label>
                 </div>
               </div>
             </div>
 
-            <div class="mb-6">
-              <label class="block text-sm font-bold text-slate-700 mb-2">หมายเหตุ</label>
-              <input type="text" name="notes" placeholder="ระบุสาเหตุหากมีข้อที่ไม่ผ่าน..." class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-base focus:ring-2 focus:ring-rose-500 transition">
+            <div class="mb-8">
+              <label class="block text-base font-bold text-slate-700 mb-2">หมายเหตุ</label>
+              <input type="text" name="notes" placeholder="ระบุสาเหตุหากมีข้อที่ไม่ผ่าน..." class="w-full px-5 py-4 bg-slate-50 border border-slate-300 rounded-xl text-lg focus:ring-2 focus:ring-blue-500 transition">
             </div>
 
-            <button type="submit" id="btnSubmitInspection" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold py-4 rounded-xl shadow-[0_4px_15px_rgba(225,29,72,0.4)] text-lg active:scale-95 transition">
+            <button type="submit" id="btnSubmitInspection" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-5 rounded-2xl shadow-[0_4px_20px_rgba(37,99,235,0.4)] text-xl active:scale-95 transition">
               💾 บันทึกผลตรวจ
             </button>
           </form>
         </div>
 
         <!-- หน้าจอสำเร็จ -->
-        <div id="successMessage" class="hidden text-center py-10 bg-white rounded-3xl shadow-sm border border-slate-100 mb-6">
+        <div id="successMessage" class="hidden text-center py-14 bg-white rounded-[2rem] shadow-xl border border-slate-100 mb-6">
           <div class="inline-flex items-center justify-center w-24 h-24 bg-emerald-100 text-emerald-600 rounded-full mb-6 shadow-inner">
             <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
           </div>
           <h3 class="text-3xl font-bold text-slate-900 mb-3">บันทึกข้อมูลเรียบร้อย!</h3>
           <p id="resultFeedback" class="text-lg mb-10"></p>
           <button onclick="startScanView()" class="text-white bg-blue-600 hover:bg-blue-700 font-bold px-10 py-5 rounded-2xl shadow-[0_4px_14px_rgba(37,99,235,0.4)] active:scale-95 transition text-xl w-full max-w-sm mx-auto flex items-center justify-center gap-2">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg>
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg>
             สแกนเครื่องถัดไป
           </button>
         </div>
@@ -470,7 +489,7 @@
     <nav id="nav-admin" class="hidden fixed bottom-0 w-full bg-white/95 backdrop-blur-md border-t border-slate-200 flex justify-around z-30 pb-safe pt-2 shadow-[0_-10px_20px_rgba(0,0,0,0.05)]">
       <button onclick="switchAdminTab('inventory')" id="btn-tab-inventory" class="nav-btn flex-1 py-2 text-center transition font-bold text-sm">
         <div class="icon-bg flex justify-center items-center w-14 h-9 mx-auto mb-1.5 transition-colors">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
         </div>
         ทะเบียนถัง
       </button>
@@ -542,7 +561,6 @@
   </div>
 
   <!-- ================= Modals สำหรับแก้ไข ================= -->
-  <!-- Modal ทะเบียน -->
   <div id="editInvModal" class="hidden fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 backdrop-blur-sm">
     <div class="bg-white rounded-[2rem] p-8 w-full max-w-md shadow-2xl">
       <div class="flex justify-between items-center mb-6 border-b pb-4">
@@ -583,7 +601,6 @@
     </div>
   </div>
 
-  <!-- Modal ประวัติเช็ค -->
   <div id="editReportModal" class="hidden fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 backdrop-blur-sm">
     <div class="bg-white rounded-[2rem] p-8 w-full max-w-md shadow-2xl">
       <div class="flex justify-between items-center mb-6 border-b pb-4">
@@ -612,19 +629,63 @@
 
   <!-- ================= สคริปต์หลัก ================= -->
   <script>
-    // ⚠️ นำ URL ของ Web App จาก Google Apps Script มาวางแทนที่ด้านล่างนี้ ⚠️
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz87jP3uPB1vEUCjZG5vhsJ5wA19AbZ8cfofFqDLXednFO6P20eHEIQYlXsuS3A2YUSJA/exec"; 
     
     let currentRole = null; 
+    let currentExtinguisherHistory = []; 
     let html5QrcodeScanner = null;
     let isScannerRunning = false;
     let allInventory = []; 
     let allReports = []; 
 
-    // ================== ส่วนของ API & Loading ==================
+    // ================== Helper ==================
+    function formatThaiDateShort(dateStr) {
+      if(!dateStr || dateStr === '-') return '-';
+      let d, m, y;
+      if(dateStr.includes('-')) {
+        [y, m, d] = dateStr.split('-');
+      } else if (dateStr.includes('/')) {
+        const parts = dateStr.split(' ')[0].split('/');
+        [d, m, y] = parts;
+        if(y.length === 2) y = "20" + y;
+      } else {
+        return dateStr;
+      }
+      const months = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+      const thYear = parseInt(y) > 2500 ? parseInt(y).toString().slice(-2) : (parseInt(y) + 543).toString().slice(-2);
+      return `${parseInt(d)} ${months[parseInt(m)-1]} ${thYear}`;
+    }
+
+    function calculateAge(dateStr) {
+      if(!dateStr || dateStr === '-') return '-';
+      let y, m, d;
+      if(dateStr.includes('-')) {
+          [y, m, d] = dateStr.split('-');
+      } else if (dateStr.includes('/')) {
+          const parts = dateStr.split(' ')[0].split('/');
+          [d, m, y] = parts;
+          if(y.length === 2) y = "20" + y;
+      } else return '-';
+
+      const entryDate = new Date(y, m-1, d);
+      const today = new Date();
+      let months = (today.getFullYear() - entryDate.getFullYear()) * 12;
+      months -= entryDate.getMonth();
+      months += today.getMonth();
+      
+      if(months <= 0) return 'ไม่ถึง 1 เดือน';
+      const yrs = Math.floor(months / 12);
+      const mos = months % 12;
+      let ageStr = '';
+      if(yrs > 0) ageStr += yrs + ' ปี ';
+      if(mos > 0) ageStr += mos + ' เดือน';
+      return ageStr.trim();
+    }
+
+    // ================== API & Loading ==================
     async function fetchAPI(action, data = null) {
       if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes("https://script.google.com/u/0/home/projects/1o-aQ6E_SO2TTnKkxVeTHKdXxteIdXyPkXovyxyyVIPyTZhf3zvAGkQzB/edit")) {
-        throw new Error("ระบบยังไม่พร้อม: กรุณาใส่ URL ของ Web App ในโค้ด index.html");
+        throw new Error("ระบบยังไม่พร้อม: กรุณาตรวจสอบ URL ของ Web App ในโค้ด");
       }
       
       showLoading(true, "กำลังประมวลผล...");
@@ -700,7 +761,6 @@
       const desktopNav = document.getElementById('desktop-nav-admin');
       const mobileNav = document.getElementById('nav-admin');
 
-      // ซ่อนทุกแท็บก่อน
       document.getElementById('tab-admin-inventory').classList.add('hidden');
       document.getElementById('tab-admin-report').classList.add('hidden');
       document.getElementById('tab-inspector-scan').classList.add('hidden');
@@ -717,7 +777,6 @@
       }
     }
 
-    // ================== การสลับหน้า (Admin) ==================
     function switchAdminTab(tabName) {
       document.getElementById('tab-admin-inventory').classList.add('hidden');
       document.getElementById('tab-admin-report').classList.add('hidden');
@@ -741,7 +800,6 @@
       window.scrollTo(0,0);
     }
 
-    // ================== ฟังก์ชัน Download CSV ==================
     function downloadCSV(csvContent, filename) {
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement("a");
@@ -753,7 +811,7 @@
       document.body.removeChild(link);
     }
 
-    // ================== ฝั่ง Admin (Inventory) ==================
+    // ================== Admin (Inventory) ==================
     async function submitInventory(e) {
       e.preventDefault();
       const btn = document.getElementById('btnGenQR');
@@ -849,10 +907,8 @@
       }
       document.getElementById('edit-inv-loc').value = loc;
       
-      // Formatting Date for HTML Date input (YYYY-MM-DD)
       const formatDateForInput = (dStr) => {
         if(!dStr || dStr === '-') return '';
-        // If it's DD/MM/YYYY
         if(dStr.includes('/')) {
             const parts = dStr.split(' ')[0].split('/');
             if(parts.length === 3) return `20${parts[2].slice(-2)}-${parts[1]}-${parts[0]}`;
@@ -914,7 +970,7 @@
       setTimeout(() => { window.print(); }, 500);
     }
 
-    // ================== ฝั่ง Admin (Reports) ==================
+    // ================== Admin (Reports) ==================
     async function loadReports() {
       const tbody = document.getElementById('reportTableBody');
       try {
@@ -1017,51 +1073,6 @@
         btn.innerText = "บันทึกข้อมูล"; btn.disabled = false;
       }
     }
-
-    // --- Helper Functions สำหรับจัดการวันที่และอายุ ---
-    function formatThaiDateShort(dateStr) {
-      if(!dateStr || dateStr === '-') return '-';
-      let d, m, y;
-      if(dateStr.includes('-')) {
-        [y, m, d] = dateStr.split('-');
-      } else if (dateStr.includes('/')) {
-        const parts = dateStr.split(' ')[0].split('/');
-        [d, m, y] = parts;
-        if(y.length === 2) y = "20" + y;
-      } else {
-        return dateStr;
-      }
-      const months = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
-      const thYear = parseInt(y) > 2500 ? parseInt(y).toString().slice(-2) : (parseInt(y) + 543).toString().slice(-2);
-      return `${parseInt(d)} ${months[parseInt(m)-1]} ${thYear}`;
-    }
-
-    function calculateAge(dateStr) {
-      if(!dateStr || dateStr === '-') return '-';
-      let y, m, d;
-      if(dateStr.includes('-')) {
-          [y, m, d] = dateStr.split('-');
-      } else if (dateStr.includes('/')) {
-          const parts = dateStr.split(' ')[0].split('/');
-          [d, m, y] = parts;
-          if(y.length === 2) y = "20" + y;
-      } else return '-';
-
-      const entryDate = new Date(y, m-1, d);
-      const today = new Date();
-      let months = (today.getFullYear() - entryDate.getFullYear()) * 12;
-      months -= entryDate.getMonth();
-      months += today.getMonth();
-      
-      if(months <= 0) return 'ไม่ถึง 1 เดือน';
-      const yrs = Math.floor(months / 12);
-      const mos = months % 12;
-      let ageStr = '';
-      if(yrs > 0) ageStr += yrs + ' ปี ';
-      if(mos > 0) ageStr += mos + ' เดือน';
-      return ageStr.trim();
-    }
-
 
     // ================== ฝั่ง Inspector (สแกน & ฟอร์ม) ==================
     function startScanView() {
@@ -1207,65 +1218,85 @@
       }
     }
 
+    // ==== ฟังก์ชันแสดงฟอร์มที่แก้ ID ให้ตรงกับ Dashboard UI ====
     function showInspectionForm(data) {
       document.getElementById('tab-inspector-scan').classList.add('hidden');
       document.getElementById('tab-inspector-form').classList.remove('hidden');
       
-      // รีเซ็ตฟอร์ม
       document.getElementById('inspectionForm').reset();
       document.getElementById('inspectionForm').classList.remove('hidden');
       document.getElementById('successMessage').classList.add('hidden');
 
       const info = data.info;
       const history = data.history || [];
+      const latest = history.length > 0 ? history[0] : null;
 
-      // ใส่ค่าให้ Form Input
       document.getElementById('extinguisherId').value = info.id;
 
-      // ---- อัปเดต Top Card (Header) ----
-      document.getElementById('info-id-header').innerText = info.id;
-      document.getElementById('info-loc-header').innerText = info.loc;
-      document.getElementById('info-type-header').innerText = info.type;
+      // ================= DASHBOARD HEADER =================
+      // เปลี่ยนจาก innerText เป็น innerHTML หรือกำหนดค่าตรงๆ แบบปลอดภัย
+      const idHeader = document.getElementById('info-id-header');
+      if (idHeader) idHeader.innerText = info.id || '-';
+      
+      const locHeader = document.getElementById('info-loc-header');
+      if (locHeader) locHeader.innerText = info.loc || '-';
+      
+      const typeHeader = document.getElementById('info-type-header');
+      if (typeHeader) typeHeader.innerText = info.type || '-';
 
-      // ---- อัปเดต Middle Card (ข้อมูลถัง) ----
-      document.getElementById('info-type-detail').innerText = info.type;
-      document.getElementById('info-loc-detail').innerText = info.loc;
-      document.getElementById('info-dateEntry-detail').innerText = formatThaiDateShort(info.dateEntry);
-      document.getElementById('info-age').innerText = calculateAge(info.dateEntry);
-      document.getElementById('info-check-count').innerText = history.length + " ครั้ง";
-
-      // ---- อัปเดตประวัติล่าสุด & ป้ายสถานะ ----
-      const badgeBox = document.getElementById('info-status-badge');
-      const lastCheckText = document.getElementById('info-last-check');
-      const recentUl = document.getElementById('info-recent-history');
-      recentUl.innerHTML = '';
-
-      if (history.length > 0) {
-        const lastRec = history[0];
-        lastCheckText.innerText = "ตรวจล่าสุด : " + formatThaiDateShort(lastRec.date);
-
-        if(lastRec.status === 'ปกติ') {
-          badgeBox.innerHTML = `<span class="bg-emerald-100 text-emerald-700 px-4 py-1.5 rounded-full text-sm font-bold shadow-sm">🟢 พร้อมใช้งาน</span>`;
+      let statusHtml = '<span class="text-slate-500">ไม่มีข้อมูล</span>';
+      if(latest) {
+        const lastCheck = document.getElementById('info-last-check');
+        if (lastCheck) lastCheck.innerText = "ตรวจล่าสุด : " + formatThaiDateShort(latest.date);
+        
+        if(latest.status === 'ปกติ') {
+            statusHtml = '<span class="bg-emerald-100 text-emerald-700 px-4 py-2 rounded-full text-base font-bold shadow-sm flex items-center gap-1">🟢 พร้อมใช้งาน</span>';
         } else {
-          badgeBox.innerHTML = `<span class="bg-rose-100 text-rose-700 px-4 py-1.5 rounded-full text-sm font-bold shadow-sm">🔴 ชำรุด</span>`;
+            statusHtml = '<span class="bg-rose-100 text-rose-700 px-4 py-2 rounded-full text-base font-bold shadow-sm flex items-center gap-1">🔴 ชำรุด</span>';
         }
-
-        // วนลูปโชว์ประวัติ 5 อันดับล่าสุด
-        const recentHistory = history.slice(0, 5);
-        recentHistory.forEach(rec => {
-           let isOk = rec.status === 'ปกติ';
-           let icon = isOk ? `<span class="text-emerald-600">✓ ปกติ</span>` : `<span class="text-rose-600">❌ ชำรุด</span>`;
-           recentUl.innerHTML += `<li class="flex justify-between items-center py-2 border-b border-slate-100 last:border-0">
-             <span class="text-slate-600 font-medium">${formatThaiDateShort(rec.date)}</span>
-             <span class="font-bold text-sm">${icon}</span>
-           </li>`;
-        });
       } else {
-        lastCheckText.innerText = "ยังไม่เคยตรวจเช็ค";
-        badgeBox.innerHTML = `<span class="bg-slate-200 text-slate-700 px-4 py-1.5 rounded-full text-sm font-bold shadow-sm">⚪ รอการตรวจ</span>`;
-        recentUl.innerHTML = `<li class="text-center py-4 text-slate-400 text-sm">ไม่มีประวัติการตรวจเช็ค</li>`;
+        const lastCheck = document.getElementById('info-last-check');
+        if (lastCheck) lastCheck.innerText = "ตรวจล่าสุด : -";
+        statusHtml = '<span class="bg-gray-100 text-gray-700 px-4 py-2 rounded-full text-base font-bold shadow-sm flex items-center gap-1">⚪ รอการตรวจ</span>';
       }
+      const statusBadge = document.getElementById('info-status-badge');
+      if (statusBadge) statusBadge.innerHTML = statusHtml;
 
+      // ================= DASHBOARD INFO =================
+      const dashType = document.getElementById('dash-info-type');
+      if (dashType) dashType.innerText = info.type || '-';
+      
+      const dashLoc = document.getElementById('dash-info-loc');
+      if (dashLoc) dashLoc.innerText = info.loc || '-';
+      
+      const dashEntry = document.getElementById('dash-info-entry');
+      if (dashEntry) dashEntry.innerText = formatThaiDateShort(info.dateEntry);
+      
+      const dashAge = document.getElementById('dash-info-age');
+      if (dashAge) dashAge.innerText = calculateAge(info.dateEntry);
+
+      // ================= DASHBOARD HISTORY =================
+      const histList = document.getElementById('dash-history-list');
+      if (histList) {
+          if(history.length === 0) {
+              histList.innerHTML = '<tr><td colspan="2" class="px-5 py-6 text-center text-slate-400">ไม่พบประวัติย้อนหลัง</td></tr>';
+          } else {
+              let hHtml = '';
+              const maxList = Math.min(history.length, 5);
+              for(let i=0; i<maxList; i++) {
+                  const h = history[i];
+                  const isOk = h.status === 'ปกติ';
+                  const sIcon = isOk ? '✓ ปกติ' : '❌ ชำรุด';
+                  const sColor = isOk ? 'text-emerald-600' : 'text-rose-600';
+                  hHtml += `<tr>
+                    <td class="px-5 py-4 text-slate-600 whitespace-nowrap">${formatThaiDateShort(h.date)}</td>
+                    <td class="px-5 py-4 font-bold ${sColor} text-right">${sIcon}</td>
+                  </tr>`;
+              }
+              histList.innerHTML = hHtml;
+          }
+      }
+      
       window.scrollTo(0,0);
     }
 
@@ -1306,6 +1337,33 @@
       } finally {
         btn.innerText = "💾 บันทึกผลตรวจ"; btn.disabled = false;
       }
+    }
+
+    function printRecord(id, date, status, inspector, gauge, sealPin, hose, cylinder) {
+      document.getElementById('print-id').innerText = id;
+      document.getElementById('print-date').innerText = date;
+      document.getElementById('print-inspector').innerText = inspector;
+      document.getElementById('print-status').innerText = status;
+      document.getElementById('print-status').className = status === 'ปกติ' ? 'text-green-600 font-bold text-xl' : 'text-red-600 font-bold text-xl';
+
+      const getIcon = (val) => val === 'ผ่าน' ? '✓ ผ่าน' : (val === 'ไม่ผ่าน' ? '❌ ไม่ผ่าน' : '-');
+      document.getElementById('print-gauge').innerText = getIcon(gauge);
+      document.getElementById('print-seal').innerText = getIcon(sealPin);
+      document.getElementById('print-hose').innerText = getIcon(hose);
+      document.getElementById('print-cylinder').innerText = getIcon(cylinder);
+      document.getElementById('print-sign-name').innerText = inspector;
+      
+      const printSec = document.getElementById('print-section');
+      printSec.classList.remove('hidden');
+      
+      document.querySelectorAll('style, nav, main, header, #loading-overlay').forEach(el => {
+         if(el.tagName !== 'STYLE') el.classList.add('print:hidden');
+      });
+
+      setTimeout(() => { 
+        window.print(); 
+        printSec.classList.add('hidden');
+      }, 300);
     }
   </script>
 </body>
