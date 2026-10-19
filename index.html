@@ -482,7 +482,7 @@
           <h3 class="text-2xl font-bold text-gray-900 mb-2">บันทึกข้อมูลเรียบร้อย!</h3>
           <p id="resultFeedback" class="text-base mb-8"></p>
           <button onclick="startScanView()" class="text-white bg-indigo-600 hover:bg-indigo-700 font-medium px-8 py-3.5 rounded-full md-elevation-1 active:scale-[0.98] transition-all text-base w-full max-w-xs mx-auto flex items-center justify-center gap-2">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg>
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg>
             สแกนเครื่องถัดไป
           </button>
         </div>
@@ -953,28 +953,85 @@
       finally { btn.innerText = "บันทึกข้อมูล"; btn.disabled = false; }
     }
 
-    function printQR(id) {
-      const baseUrl = window.location.href.split('?')[0]; 
-      const appUrl = baseUrl + "?id=" + encodeURIComponent(id);
-      
+    // ================== พิมพ์ QR (มีชนิดถัง + สถานที่ตั้ง) ==================
+    async function printQR(id) {
+      // ดึงข้อมูลถังจากทะเบียน (ไม่ต้องส่งผ่าน onclick จึงไม่มีปัญหาเครื่องหมายคำพูด)
+      const item = allInventory.find(r => String(r.id) === String(id)) || {};
+      const typeText = item.type || '-';
+      const locText  = item.loc  || '-';
+
+      // ใส่ข้อมูลลงใน QR (id ยังอยู่เหมือนเดิม จึงสแกนกับระบบเดิมได้)
+      const baseUrl = window.location.href.split('?')[0];
+      const appUrl = baseUrl
+        + "?id=" + encodeURIComponent(id)
+        + "&type=" + encodeURIComponent(typeText)
+        + "&loc=" + encodeURIComponent(locText);
+
       const tempCanvas = document.createElement('canvas');
       new QRious({ element: tempCanvas, value: appUrl, size: 400, level: 'H' });
 
+      // รอให้ฟอนต์ Sarabun โหลดก่อนวาดลง canvas
+      try {
+        await document.fonts.load("bold 36px Sarabun");
+        await document.fonts.load("28px Sarabun");
+      } catch (e) {}
+
+      const W = 460, PAD = 30, maxTextW = W - PAD * 2;
       const canvas = document.getElementById('qrCanvasPrint');
+
+      // ฟังก์ชันตัดบรรทัด (ภาษาไทยไม่มีช่องว่าง จึงตัดตามความกว้างตัวอักษร)
+      function wrapText(ctx, text, maxW) {
+        const lines = []; let line = '';
+        for (const ch of String(text)) {
+          if (ctx.measureText(line + ch).width > maxW && line) { lines.push(line); line = ch; }
+          else line += ch;
+        }
+        if (line) lines.push(line);
+        return lines;
+      }
+
+      // คำนวณจำนวนบรรทัดก่อน เพื่อกำหนดความสูงป้าย
+      const measure = document.createElement('canvas').getContext('2d');
+      measure.font = "28px Sarabun";
+      const typeLines = wrapText(measure, "ชนิด: " + typeText, maxTextW);
+      const locLines  = wrapText(measure, "ที่ตั้ง: " + locText, maxTextW);
+
+      const lineH = 38;
+      const H = PAD + 400 + 20 + 50 + (typeLines.length + locLines.length) * lineH + PAD;
+      canvas.width = W; canvas.height = H;
+      canvas.style.width = W + "px";
+      canvas.style.height = H + "px";
+
       const ctx = canvas.getContext('2d');
-      canvas.width = 400; canvas.height = 460; 
-      
       ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(tempCanvas, 0, 0);
+      ctx.fillRect(0, 0, W, H);
+
+      // QR
+      ctx.drawImage(tempCanvas, (W - 400) / 2, PAD);
+
+      // ข้อความ
+      ctx.textAlign = "center";
+      let y = PAD + 400 + 20 + 36;
       ctx.fillStyle = "#111827";
       ctx.font = "bold 40px Sarabun";
-      ctx.textAlign = "center";
-      ctx.fillText("ID: " + id, canvas.width / 2, 440);
+      ctx.fillText("ID: " + id, W / 2, y);
+
+      ctx.font = "28px Sarabun";
+      ctx.fillStyle = "#374151";
+      y += 14;
+      [...typeLines, ...locLines].forEach(line => {
+        y += lineH;
+        ctx.fillText(line, W / 2, y);
+      });
+
+      // เส้นขอบป้าย
+      ctx.strokeStyle = "#111827";
+      ctx.lineWidth = 3;
+      ctx.strokeRect(2, 2, W - 4, H - 4);
 
       document.getElementById('print-qr-section').classList.remove('hidden');
-      document.querySelectorAll('style, nav, main, header, #loading-overlay').forEach(el => {
-         if(el.tagName !== 'STYLE') el.classList.add('print:hidden');
+      document.querySelectorAll('nav, main, header, #loading-overlay').forEach(el => {
+        el.classList.add('print:hidden');
       });
 
       setTimeout(() => { window.print(); }, 500);
